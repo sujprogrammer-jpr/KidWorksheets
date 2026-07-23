@@ -7,6 +7,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased — Planning Complete]
 
+### Updated — 2026-07-23 (Session 2 — Architecture Refinement)
+
+#### Infrastructure Changes
+- **Database:** Changed from AWS RDS → **Supabase** (managed PostgreSQL)
+- **Cache:** Changed from AWS ElastiCache → **Redis on Linux server** (self-hosted)
+- **AWS scope reduced:** Only S3, CloudFront, API Gateway, SQS — nothing else
+- **AI:** Now server-side only via **n8n + Gemini API** — zero client AI access
+- **Monitoring:** Changed from CloudWatch → **Grafana + Loki + OTel + Prometheus** (open-source)
+- **Backend:** Changed from Express.js monolith → **Microservices** (Express.js + .NET Core per service)
+- **Mobile:** Changed to **micro-frontend** architecture (8 isolated feature modules)
+- **Docker:** Removed — using **PM2** on Linux server instead
+- **Testing:** Dev testing via **Expo Go** first — store publish only when stable
+
+#### New Documents Added
+- `docs/DISCUSSION_LOG_S2.md` — Session 2 requirements update log
+- `docs/architecture/observability.md` — Grafana+Loki+OTel+Prometheus stack
+- `docs/design/design-specifications.md` — Full Figma-ready design spec (colors, typography, components, Lottie catalog)
+
+#### Updated Documents
+- `docs/architecture/system-design.md` → v3.0 (complete microservices rewrite)
+- `docs/IMPLEMENTATION_PLAN.md` → v3.0 (tech stack + infrastructure updates)
+- `docs/adr/decisions.md` → Added ADR-008 through ADR-012
+- `docs/sprints/phase-0-foundation.md` → Updated for new infra
+
+---
+
 ### Added — 2026-07-23 (Planning Session)
 
 #### Project Documentation

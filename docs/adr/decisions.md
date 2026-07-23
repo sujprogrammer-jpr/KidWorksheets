@@ -131,21 +131,91 @@ Redux Toolkit was rejected due to boilerplate overhead for a mobile project. Mob
 
 ---
 
-# ADR-007: Payments Provider
+# ADR-008: Primary Database — Supabase over AWS RDS
 
-> **Status:** Accepted (implementation deferred to Phase 2+)
-> **Date:** 2026-07-23
+> **Status:** Accepted
+> **Date:** 2026-07-23 (Session 2)
 
 ## Decision
-
-**Razorpay** for subscription billing.
+**Supabase** (managed PostgreSQL) instead of AWS RDS.
 
 ## Rationale
+- No AWS costs for database (user explicitly does not want AWS DB/cache)
+- Supabase provides PostgreSQL + Row Level Security + real-time subscriptions + built-in REST API
+- Free tier is generous for Phase 1
+- Supabase Studio: visual DB management (easier than raw psql)
+- Prisma ORM works seamlessly with Supabase PostgreSQL
+- Can migrate to self-hosted PostgreSQL or AWS RDS later if needed
 
-- User's explicit requirement
-- India-first payment provider — UPI, cards, netbanking, wallets
-- Supports recurring subscriptions natively
-- React Native SDK available: `react-native-razorpay`
-- Note: In Phase 1, subscription features are wired but inactive (all content free)
+---
 
-> ⚠️ **App Store Note:** Apple requires in-app purchases for digital content subscriptions to go through Apple's IAP system (30% commission). Android has more flexibility. This needs legal/business review before Phase 8.
+# ADR-009: Self-Hosted Linux Server for Redis, MySQL, n8n
+
+> **Status:** Accepted
+> **Date:** 2026-07-23 (Session 2)
+
+## Decision
+**Linux server** hosts Redis cache, MySQL (analytics/n8n DB), n8n AI automation, admin panel, and observability.
+
+## Rationale
+- No AWS ElastiCache costs (user preference: AWS for S3, CDN, API Gateway, SQS only)
+- Full control over Redis configuration and persistence
+- n8n is self-hosted by design (n8n Cloud is paid; self-host is free)
+- MySQL on Linux is well-understood, low-cost, performant for analytics
+- PM2 as process manager: simple, battle-tested, no Docker overhead
+- Let's Encrypt SSL: free certificates via Certbot
+
+---
+
+# ADR-010: Observability — Grafana + Loki + OpenTelemetry + Prometheus
+
+> **Status:** Accepted
+> **Date:** 2026-07-23 (Session 2)
+
+## Decision
+**Open-source observability stack** replacing AWS CloudWatch + Sentry.
+
+## Rationale
+- 100% free (open-source tools, self-hosted)
+- Grafana is the industry-standard open-source dashboard
+- Loki: purpose-built log aggregation, integrates natively with Grafana
+- OpenTelemetry: vendor-neutral distributed tracing (CNCF standard)
+- Prometheus: de-facto standard for metrics
+- Single Grafana dashboard gives: logs + traces + metrics in one place
+- Note: Sentry is kept for **mobile crash reporting** only (free tier)
+
+---
+
+# ADR-011: Micro-Frontend Architecture (Mobile)
+
+> **Status:** Accepted
+> **Date:** 2026-07-23 (Session 2)
+
+## Decision
+Mobile app organized as **8 independent feature modules** (micro-frontends), each with its own error boundary.
+
+## Rationale
+- Failure isolation: if Creation module crashes, Player module is unaffected
+- Independent development: each module can be developed in parallel
+- Easier testing: each module tested in isolation
+- Consistent with microservices philosophy on the backend
+- Expo Router file-based routing maps cleanly to module folders
+
+---
+
+# ADR-012: No Docker — PM2 on Linux Server
+
+> **Status:** Accepted
+> **Date:** 2026-07-23 (Session 2)
+
+## Decision
+**PM2** process manager instead of Docker containers.
+
+## Rationale
+- User explicitly requested no Docker
+- PM2 is simpler to manage for a small-to-medium app
+- PM2 handles process restart, logging, clustering, and monitoring
+- Lower memory overhead than Docker containers
+- No Docker daemon, no image management complexity
+- PM2 ecosystem.config.js gives clear visibility of all running services
+- Migration to Docker/Kubernetes is possible in future if scale demands it

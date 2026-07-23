@@ -1,9 +1,9 @@
-# KidWorksheets — Enterprise App: Final Implementation Plan v2.0
+# KidWorksheets — Enterprise App: Final Implementation Plan v3.0
 
 > **Architect Mode:** Senior Architect | 13+ Year Experience
-> **Platform:** React Native (Expo) + Node.js Backend + AWS Infrastructure
+> **Platform:** React Native (Expo) + Microservices Backend (Express.js + .NET Core) + AWS + Linux
 > **Target:** iOS App Store + Google Play Store + Web Admin Panel
-> **Status:** ✅ All Open Questions Answered — Approved for Execution
+> **Status:** ✅ v3.0 — Updated per Session 2 requirements — Approved
 
 ---
 
@@ -73,44 +73,59 @@ The platform supports **interactive Q&A**, **oral revision**, and **image-based 
 
 ## Tech Stack
 
-### Mobile (React Native + Expo)
+### Mobile (React Native + Expo) — Micro-Frontend Architecture
 | Layer | Technology |
 |---|---|
 | Framework | React Native + Expo SDK 52+ |
 | Language | TypeScript 5.x (strict) |
 | Navigation | Expo Router v4 (file-based) |
+| Architecture | Micro-frontends (8 independent feature modules) |
 | State | Zustand + TanStack Query v5 |
 | Forms | React Hook Form + Zod |
 | Styling | NativeWind v4 (Tailwind for RN) |
-| Animations | React Native Reanimated v3 + Lottie |
+| Animations | React Native Reanimated v3 + **Lottie** (extensive use) |
 | Auth | Firebase Auth + Google Sign-In + expo-local-authentication |
 | PDF Viewer | react-native-pdf |
 | PDF Generator | expo-print + HTML template |
 | Offline | WatermelonDB (SQLite) + TanStack Query cache |
 | Storage | expo-secure-store (tokens) + expo-file-system (assets) |
 | Sharing | expo-sharing + Google Drive API |
-| Push Notif. | expo-notifications + FCM |
+| Push Notif. | expo-notifications + FCM + Apple APNS |
 | i18n | i18next + react-i18next |
-| Analytics | Firebase Analytics + Mixpanel |
-| Crash | Sentry |
-| AI | Gemini API / OpenAI API |
-| Testing | Jest + RNTL + Detox |
+| Analytics | Firebase Analytics |
+| Crash | Sentry (free tier) |
+| AI (client) | ❌ NONE — all AI is server-side via n8n |
+| Testing | Jest + RNTL |
+| Dev Testing | **Expo Go** (primary), EAS Preview (pre-release)
 
-### Backend (Node.js)
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js 20 LTS |
-| Framework | Express.js + TypeScript |
-| API Gateway | AWS API Gateway |
-| Auth | Firebase Admin SDK + JWT |
-| ORM | Prisma |
-| Database | PostgreSQL (AWS RDS / Supabase) |
-| Cache | Redis (AWS ElastiCache) |
-| File Storage | AWS S3 + CloudFront CDN |
-| AI | Gemini API (primary) + OpenAI (fallback) |
-| Queue | AWS SQS (async jobs) |
-| Monitoring | CloudWatch + Sentry |
-| Payments | Razorpay SDK (stub in Phase 1) |
+### Backend — Microservices
+| Service | Technology | Database |
+|---|---|---|
+| Auth Service | Express.js + TypeScript | Supabase (PostgreSQL) |
+| Worksheet Service | **.NET Core 8 (C#)** | Supabase (PostgreSQL) |
+| Progress Service | **.NET Core 8 (C#)** | Supabase (PostgreSQL) |
+| AI/Automation Service | **n8n + Firebase Cloud Functions + Gemini API** | MySQL (Linux) |
+| Share Service | Express.js + TypeScript | — |
+| File Service | Express.js + TypeScript | — |
+| Notification Service | Express.js + TypeScript | Supabase |
+| Admin Service | **.NET Core 8 (C#)** | MySQL (Linux) |
+
+### Infrastructure
+| Resource | Provider | Notes |
+|---|---|---|
+| API Gateway | **AWS API Gateway** | Rate limiting, routing |
+| File Storage | **AWS S3** | Private bucket |
+| CDN | **AWS CloudFront** | S3 delivery |
+| Job Queue | **AWS SQS** | Async jobs |
+| Primary DB | **Supabase (PostgreSQL)** | NOT AWS RDS |
+| Analytics DB | **MySQL (Linux server)** | Self-hosted |
+| Cache | **Redis (Linux server)** | Self-hosted, NOT ElastiCache |
+| Auth + FCM | **Firebase (Google Cloud)** | |
+| AI Workflows | **n8n (Linux server)** | Server-side AI automation |
+| AI Model | **Gemini API (Google Cloud)** | Via n8n/Cloud Functions only |
+| Process Manager | **PM2 (Linux server)** | NOT Docker |
+| Monitoring | **Grafana + Loki + OTel + Prometheus** | Open-source, free |
+| Payments | **Razorpay** (stub in Phase 1) | |
 
 ### Admin Panel
 | Layer | Technology |
@@ -315,16 +330,21 @@ KidWorksheets/
 
 | ADR | Decision |
 |---|---|
-| ADR-001 | React Native + Expo (cross-platform speed + EAS) |
-| ADR-002 | AWS hybrid: Firebase Auth/FCM + Node.js + PostgreSQL + Redis |
+| ADR-001 | React Native + Expo (cross-platform speed, Expo Go for dev) |
+| ADR-002 | Microservices: Express.js (Auth/Share/File/Notif) + .NET Core (Worksheet/Progress/Admin) |
 | ADR-003 | WatermelonDB for offline-first architecture |
-| ADR-004 | Gemini API (primary AI) — Hindi support + structured output |
+| ADR-004 | Gemini API via n8n — server-side only, zero client AI access |
 | ADR-005 | 3-strategy sharing (Drive + PDF + Deep Link) |
 | ADR-006 | Zustand + TanStack Query (no Redux) |
 | ADR-007 | Razorpay (India-first, UPI + cards + wallets) |
+| ADR-008 | Supabase (PostgreSQL) as primary DB — NOT AWS RDS |
+| ADR-009 | Linux server for Redis, MySQL, n8n, admin, monitoring |
+| ADR-010 | Grafana + Loki + OTel + Prometheus — open-source observability |
+| ADR-011 | Micro-frontend mobile architecture — isolated feature modules |
+| ADR-012 | No Docker — PM2 process manager on Linux server |
 
 > Full reasoning: see [adr/decisions.md](./adr/decisions.md)
 
 ---
 
-*Plan Version: 2.0 | Created: 2026-07-23 | Status: ✅ Approved*
+*Plan Version: 3.0 | Created: 2026-07-23 | Updated: 2026-07-23 (Session 2) | Status: ✅ Approved*
