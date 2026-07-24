@@ -5,7 +5,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased — Planning Complete]
+## [Unreleased — Planning In Progress]
+
+### Updated — 2026-07-24 (Session 3 — App Flow Revision → Plan v4.0)
+
+#### Major Flow Changes
+- **Mentor-Owned Classes:** Mentors now create their own classes (free-text). Admin can promote to PUBLIC.
+- **Mentor-Owned Subjects:** Mentors create subjects per class with default writing style.
+- **Worksheet Types:** Renamed to WRITTEN (Interactive Q&A) | ORAL. IMAGE_BASED via AI image upload (Phase 4).
+- **AI Creation IN SCOPE:** Both prompt-based + image-upload AI creation added to Phase 4 (not deferred).
+- **Student Profile = Full CRM:** name, parents, contacts, DOB, fees, photo, school (10+ fields).
+- **Student Login:** Reverted to PIN-based sub-profile under mentor (not independent mobile+PIN login).
+- **Subject Enrollment:** Students enrolled per subject (not entire class).
+- **Admin Full Access:** Admin sees everything, can edit anything, marks content as PUBLIC.
+- **Writing Styles:** Expanded to 10 options (straight + dotted variants per line count).
+
+#### New Documents Added
+- `docs/DISCUSSION_LOG_S3.md` — Session 3 requirements update + all clarifications
+- `docs/sprints/phase-2-core-flow.md` — New Phase 2 sprint (Class/Subject/Worksheet + Student Play)
+- `docs/sprints/phase-3-students.md` — New Phase 3 sprint (Student CRM + Enrollment + PIN)
+- `docs/sprints/phase-4-ai-creation.md` — New Phase 4 sprint (AI prompt + Image upload)
+
+#### Updated Documents
+- `docs/IMPLEMENTATION_PLAN.md` → v4.0 (major rewrite with all new decisions)
+- `docs/architecture/data-models.md` → v2.0 (MentorClass, MentorSubject, Student CRM, WritingStyle v2)
+- `docs/design/screen-map.md` → v2.0 (69 screens total, new class/subject/student screens)
+- `docs/adr/decisions.md` → Added ADR-013 (Mentor Classes), ADR-014 (react-native-skia), ADR-015 (Student sub-profile)
+- Sprint roadmap expanded: Phase 0–9 (18 weeks total)
+
+#### New Tech Decision
+- **react-native-skia** added for worksheet canvas rendering (lines, grids, drawing input)
 
 ### Updated — 2026-07-23 (Session 2 — Architecture Refinement)
 

@@ -219,3 +219,65 @@ Mobile app organized as **8 independent feature modules** (micro-frontends), eac
 - No Docker daemon, no image management complexity
 - PM2 ecosystem.config.js gives clear visibility of all running services
 - Migration to Docker/Kubernetes is possible in future if scale demands it
+
+---
+
+# ADR-013: Mentor-Owned Classes and Subjects
+
+> **Status:** Accepted
+> **Date:** 2026-07-24 (Session 3)
+
+## Decision
+**Mentors create their own classes and subjects** (free-text naming). Admin does NOT seed global lists that mentors must pick from. Admin can promote mentor content to **PUBLIC** visibility for discovery by other mentors.
+
+## Rationale
+- Mentor audience includes coaching centers, private tutors, and parents — each has unique class structures (e.g., "Morning Batch", "Class 5A", "Advanced Maths")
+- Admin-seeded lists would be too rigid and require admin involvement for every new class type
+- Public promotion by admin allows best-quality content to surface organically
+- `ContentVisibility` enum (PRIVATE | PUBLIC) on `MentorClass` and `MentorSubject` models
+- Future: Mentor can optionally "request public" and admin approves
+
+---
+
+# ADR-014: react-native-skia for Worksheet Canvas
+
+> **Status:** Accepted
+> **Date:** 2026-07-24 (Session 3)
+
+## Decision
+**react-native-skia** for all canvas rendering: writing style lines/grids, mentor handwriting input, student drawing mode, and canvas-to-image export.
+
+## Rationale
+
+| Requirement | Why Skia |
+|---|---|
+| Render ruled lines (straight + dotted) | Skia `Path` with `dashEffect` |
+| Render graph-paper grid | Skia cross-hatch paths |
+| Mentor writes questions with finger | Skia touch gesture paths |
+| Student draws answers | Skia drawing canvas with touch |
+| Export canvas as image (for S3 storage) | Skia `makeImageSnapshot()` |
+| PDF export with lines/grid | Skia paths → SVG → HTML |
+
+Alternatives considered:
+- `react-native-canvas`: Limited API, poor performance
+- `react-native-svg`: Good for static rendering, not for interactive drawing
+- Skia: GPU-accelerated, battle-tested in Shopify/Expo ecosystem, first-class RN support
+
+---
+
+# ADR-015: Student as Sub-Profile Under Mentor (PIN-Based)
+
+> **Status:** Accepted
+> **Date:** 2026-07-24 (Session 3)
+
+## Decision
+**Students do not have independent accounts.** A student profile is created and managed by the mentor. Login is profile selection + 6-digit PIN entry within the mentor's app session.
+
+## Rationale
+- Target age (Pre-Primary to Class 5): young children cannot self-register reliably
+- Mentor (parent/teacher) is the responsible party for the child's data (COPPA)
+- Simplifies authentication: no email/OTP flows for children
+- Mentor controls access: can reset PIN, remove student, restrict subjects
+- Better UX: child just taps their photo and enters PIN — no typing email/username
+- Security: PIN stored as bcrypt hash; 5-attempt lockout; no plain-text storage
+- Considered: Mobile+PIN independent login — rejected (too complex for young children, COPPA concerns)
