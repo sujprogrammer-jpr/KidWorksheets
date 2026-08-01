@@ -801,16 +801,7 @@ function updateAudioAnswerForm() {
 
 // ── Collect question from form & Edit support ─────────────────
 function builderEditQuestion(index) {
-  const q = state.builder.questions[index];
-  if (!q) return;
-  state.builder.editingIndex = index;
-  state.builder.addingType   = q.type;
-  _renderBuilderUI();
-  _populateQuestionForm(q);
-  setTimeout(() => {
-    const panel = document.getElementById('builder-add-panel');
-    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 80);
+  openQuestionEditor(index);
 }
 
 function builderCancelEdit() {
