@@ -459,6 +459,59 @@ function selectTF(el, value) {
   if (btn) btn.disabled = false;
 }
 
+// Helper to get formatted correct answer for all question types
+function getCorrectAnswerDisplay(q) {
+  if (!q) return '';
+  const type = q.type;
+
+  if (type === 'CIRCLE_FIND') {
+    const items = q.correctItems || q.answer || [];
+    return Array.isArray(items) ? items.join(', ') : String(items);
+  }
+  if (type === 'MATCH' || type === 'MATCH_IMAGE') {
+    if (Array.isArray(q.pairs)) {
+      return q.pairs.map(p => `${p.left} → ${p.right}`).join(', ');
+    }
+  }
+  if (type === 'DRAG_SLOT') {
+    if (Array.isArray(q.slots)) {
+      return q.slots.map(s => s.answer).join(', ');
+    }
+  }
+  if (type === 'ARRANGE') {
+    const order = q.correctOrder || q.items || q.answer || [];
+    return Array.isArray(order) ? order.join(' → ') : String(order);
+  }
+  if (type === 'SEQUENCE_NEXT' || type === 'SEQUENCE_PREV') {
+    const ans = q.answers || q.answer || [];
+    return Array.isArray(ans) ? ans.join(', ') : String(ans);
+  }
+  if (type === 'TEXT_HIGHLIGHT') {
+    const words = q.correctWords || q.answer || [];
+    return Array.isArray(words) ? words.join(', ') : String(words);
+  }
+  if (type === 'VOWEL_SORT') {
+    if (q.mode === 'single') {
+      const words = q.correctWords || q.words || [];
+      return Array.isArray(words) ? words.join(', ') : String(words);
+    } else if (q.binMap) {
+      return Object.entries(q.binMap).map(([w,b]) => `${w}: ${b}`).join(', ');
+    }
+  }
+  if (type === 'PICTURE_WRITE') {
+    const exp = q.expectedAnswers || [q.expectedAnswer || q.answer];
+    return Array.isArray(exp) ? exp.filter(Boolean).join(' / ') : String(exp || '');
+  }
+  if (type === 'AUDIO_WRITE') {
+    return String(q.expectedAnswer || q.answer || '');
+  }
+  if (type === 'TRUE_FALSE') {
+    return q.answer === true ? 'True' : 'False';
+  }
+
+  return String(q.answer !== undefined ? q.answer : (q.expectedAnswer || ''));
+}
+
 // ── Check Answer ──────────────────────────────────────────────
 function checkAnswer() {
   if (state.player.checked) { nextQuestion(); return; }
@@ -590,7 +643,7 @@ function checkAnswer() {
         <span class="feedback-icon">${isCorrect ? '🎉' : '💡'}</span>
         ${isCorrect
           ? `<span>Excellent! That's correct!</span>`
-          : `<span>Correct answer: <strong>${esc(String(question.answer))}</strong></span>`}
+          : `<span>Correct answer: <strong>${esc(getCorrectAnswerDisplay(question))}</strong></span>`}
       </div>`;
   }
 
