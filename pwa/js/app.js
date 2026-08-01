@@ -330,8 +330,8 @@ function renderTuitionSheetPlayer(worksheet, question) {
             ${comments ? `<div style="font-family:Nunito,sans-serif;font-size:13px;color:var(--dark-text-secondary);font-style:italic">💡 Note: ${esc(comments)}</div>` : ''}
           </div>
 
-          <!-- Interactive Handwriting Canvas -->
-          <div class="tuition-canvas-container" style="position:relative;width:100%;height:520px;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.4)">
+          <!-- Interactive Handwriting Canvas (15 Rows) -->
+          <div class="tuition-canvas-container" style="position:relative;width:100%;height:750px;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.4)">
             <canvas id="tuition-bg-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1"></canvas>
             <canvas id="tuition-draw-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;touch-action:none;cursor:crosshair"></canvas>
           </div>
@@ -1283,120 +1283,85 @@ function drawSheetLines(ctx, W, H) {
   }
 }
 
-// ── Draw Full-Page Tuition Notebook Lines ──────────────────────
+// ── Draw Full-Page Tuition Notebook Lines (Exact 15 Rows) ──────────────────────
 function drawTuitionNotebookLines(ctx, W, H, sheetType, sampleText) {
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#FEFCF7';
   ctx.fillRect(0, 0, W, H);
 
-  const marginX = 45;
+  const totalRows = 15;
+  const startY = 18;
+
+  // Compute row height & gap for 15 rows
+  const availableH = H - startY - 18;
+  const gap = Math.max(6, Math.floor(availableH / (totalRows * 4)));
+  const bandH = Math.max(34, Math.floor((availableH - (totalRows - 1) * gap) / totalRows));
+
+  const leftX = 14;
+  const rightX = W - 14;
 
   if (sheetType === '4-line') {
-    // English 4-Line Notebook Pattern (Red, Blue Dash, Blue, Red)
-    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
-
-    const bandH = 65, gap = 22, startY = 25;
-    let y = startY;
-    let isTopBand = true;
-
-    while (y + bandH <= H - 10) {
+    // English 4-Line Notebook Pattern (15 Pink Box Rows)
+    for (let r = 0; r < totalRows; r++) {
+      const y = startY + r * (bandH + gap);
       const y1 = y;
       const y2 = y + bandH * 0.33;
       const y3 = y + bandH * 0.67;
       const y4 = y + bandH;
 
-      ctx.strokeStyle = 'rgba(255, 75, 75, 0.15)'; ctx.lineWidth = 1;
-      ctx.strokeRect(marginX + 6, y1 - 2, W - marginX - 12, bandH + 4);
+      // Pink outer rectangular border
+      ctx.strokeStyle = '#EC407A'; ctx.lineWidth = 2; ctx.setLineDash([]);
+      ctx.strokeRect(leftX, y, rightX - leftX, bandH);
 
-      ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 2; ctx.setLineDash([]);
-      ctx.beginPath(); ctx.moveTo(marginX + 6, y1); ctx.lineTo(W - 12, y1); ctx.stroke();
+      // Line 2: Midline (Light Blue Dash)
+      ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.2; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(leftX, y2); ctx.lineTo(rightX, y2); ctx.stroke();
 
-      ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
-      ctx.beginPath(); ctx.moveTo(marginX + 6, y2); ctx.lineTo(W - 12, y2); ctx.stroke();
-
-      ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 2; ctx.setLineDash([]);
-      ctx.beginPath(); ctx.moveTo(marginX + 6, y3); ctx.lineTo(W - 12, y3); ctx.stroke();
-
-      ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 2; ctx.setLineDash([]);
-      ctx.beginPath(); ctx.moveTo(marginX + 6, y4); ctx.lineTo(W - 12, y4); ctx.stroke();
-
-      if (isTopBand && sampleText) {
-        ctx.save();
-        ctx.font = `bold 28px Nunito, sans-serif`;
-        ctx.fillStyle = 'rgba(108, 99, 255, 0.3)';
-        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-        ctx.fillText(sampleText, marginX + 16, y3);
-        ctx.restore();
-        isTopBand = false;
-      }
-
-      y += bandH + gap;
+      // Line 3: Baseline (Light Blue Solid)
+      ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(leftX, y3); ctx.lineTo(rightX, y3); ctx.stroke();
     }
   } else if (sheetType === '3-line') {
-    // Hindi 3-Line Notebook Pattern (Red Shiro-rekha, Blue Dash, Red Baseline)
-    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
+    // Hindi 3-Line Notebook Pattern (15 Pink Box Rows with 3 Inner Light Blue Lines — matching Image #2!)
+    for (let r = 0; r < totalRows; r++) {
+      const y = startY + r * (bandH + gap);
 
-    const bandH = 55, gap = 20, startY = 25;
-    let y = startY;
-    let isTopBand = true;
+      // 1. Draw Pink / Rose Rectangular Outer Box (Image #2 style)
+      ctx.strokeStyle = '#EC407A'; ctx.lineWidth = 2; ctx.setLineDash([]);
+      ctx.strokeRect(leftX, y, rightX - leftX, bandH);
 
-    while (y + bandH <= H - 10) {
-      const y1 = y;
-      const y2 = y + bandH * 0.5;
-      const y3 = y + bandH;
+      // 2. Draw 3 Inner Light Blue Parallel Lines inside the Pink Box
+      ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.2; ctx.setLineDash([]);
 
-      ctx.strokeStyle = '#F48FB1'; ctx.lineWidth = 2.5; ctx.setLineDash([]);
-      ctx.strokeRect(marginX + 6, y1 - 4, W - marginX - 12, bandH + 8);
+      const y1 = y + bandH * 0.25;
+      const y2 = y + bandH * 0.50;
+      const y3 = y + bandH * 0.75;
 
-      ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.moveTo(marginX + 6, y1); ctx.lineTo(W - 12, y1); ctx.stroke();
-
-      ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]);
-      ctx.beginPath(); ctx.moveTo(marginX + 6, y2); ctx.lineTo(W - 12, y2); ctx.stroke();
-
-      ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2; ctx.setLineDash([]);
-      ctx.beginPath(); ctx.moveTo(marginX + 6, y3); ctx.lineTo(W - 12, y3); ctx.stroke();
-
-      if (isTopBand && sampleText) {
-        ctx.save();
-        ctx.font = `bold 28px Hind, sans-serif`;
-        ctx.fillStyle = 'rgba(43, 127, 255, 0.4)';
-        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-        ctx.fillText(sampleText, marginX + 20, y3 - 2);
-        ctx.restore();
-        isTopBand = false;
-      }
-
-      y += bandH + gap;
+      ctx.beginPath(); ctx.moveTo(leftX, y1); ctx.lineTo(rightX, y1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(leftX, y2); ctx.lineTo(rightX, y2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(leftX, y3); ctx.lineTo(rightX, y3); ctx.stroke();
     }
   } else if (sheetType === '2-line') {
-    // Hindi 2-Line Pattern
-    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
+    // Hindi 2-Line Pattern (15 Pink Box Rows)
+    for (let r = 0; r < totalRows; r++) {
+      const y = startY + r * (bandH + gap);
+      ctx.strokeStyle = '#EC407A'; ctx.lineWidth = 2; ctx.setLineDash([]);
+      ctx.strokeRect(leftX, y, rightX - leftX, bandH);
 
-    const bandH = 50, gap = 20, startY = 25;
-    let y = startY;
-    while (y + bandH <= H - 10) {
-      ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(marginX + 6, y); ctx.lineTo(W - 12, y); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(marginX + 6, y + bandH); ctx.lineTo(W - 12, y + bandH); ctx.stroke();
-      y += bandH + gap;
+      const y2 = y + bandH * 0.50;
+      ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(leftX, y2); ctx.lineTo(rightX, y2); ctx.stroke();
     }
   } else if (sheetType === '1-line') {
-    // Single Line Notebook Pattern
-    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
-
-    const lineGap = 40, startY = 40;
-    ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 1.5;
-    for (let y = startY; y <= H - 20; y += lineGap) {
-      ctx.beginPath(); ctx.moveTo(marginX + 6, y); ctx.lineTo(W - 12, y); ctx.stroke();
+    // Single Line Notebook Pattern (15 Rows)
+    for (let r = 0; r < totalRows; r++) {
+      const y = startY + r * (bandH + gap) + bandH;
+      ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(leftX, y); ctx.lineTo(rightX, y); ctx.stroke();
     }
   } else if (sheetType === 'grid') {
-    // Maths Square Grid Pattern
-    const cell = 45;
+    // Maths Square Grid Pattern (15 Box Rows)
+    const cell = Math.floor(H / totalRows);
     ctx.strokeStyle = '#CFD8DC'; ctx.lineWidth = 1; ctx.setLineDash([]);
     for (let x = 0; x <= W; x += cell) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
@@ -1410,7 +1375,6 @@ function drawTuitionNotebookLines(ctx, W, H, sheetType, sampleText) {
   } else {
     // Blank Canvas
     ctx.strokeStyle = '#333333'; ctx.lineWidth = 2; ctx.setLineDash([]);
-    ctx.strokeRect(10, 10, W - 20, H - 20);
   }
 }
 
@@ -2749,7 +2713,7 @@ function renderPrint(worksheetId) {
         </div>
 
         <div class="print-tuition-sheet-wrap" style="width:100%;margin-top:10px">
-          <canvas id="print-tuition-canvas" style="width:100%;height:750px;border:1px solid #ccc;border-radius:4px;background:#FEFCF7"></canvas>
+          <canvas id="print-tuition-canvas" style="width:100%;height:950px;border:1px solid #ccc;border-radius:4px;background:#FEFCF7"></canvas>
         </div>
 
         <div class="print-footer">
@@ -2762,7 +2726,7 @@ function renderPrint(worksheetId) {
       const cvs = document.getElementById('print-tuition-canvas');
       if (cvs) {
         cvs.width = cvs.clientWidth || 800;
-        cvs.height = 750;
+        cvs.height = 950;
         const ctx = cvs.getContext('2d');
         drawTuitionNotebookLines(ctx, cvs.width, cvs.height, sheetType, sampleText);
       }

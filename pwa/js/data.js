@@ -996,13 +996,13 @@ const TUITION_WORKSHEETS = [
     sheetType: '4-line',
     instruction: 'Write letters A to Z in capital letters',
     comments: 'Capital letters must sit on the blue baseline and touch the top red headline.',
-    sampleText: 'A  B  C  D  E  F  G  H',
+    sampleText: '',
     questions: [
       q('tt1q1', 'TUITION_CANVAS', 'Write letters A to Z in capital letters', {
         sheetType: '4-line',
         instruction: 'Write letters A to Z in capital letters',
         comments: 'Capital letters must sit on the blue baseline and touch the top red headline.',
-        sampleText: 'A  B  C  D  E  F  G  H'
+        sampleText: ''
       })
     ]
   },
@@ -1018,13 +1018,13 @@ const TUITION_WORKSHEETS = [
     sheetType: '3-line',
     instruction: 'चल नल पर जल भर — दो अक्षर वाले शब्द लिखिए।',
     comments: 'शिरोरेखा सीधी खींचिए और अक्षरों की बनावट सुंदर रखिए।',
-    sampleText: 'चल  नल  पर  जल  भर',
+    sampleText: '',
     questions: [
       q('tt2q1', 'TUITION_CANVAS', 'चल नल पर जल भर — दो अक्षर वाले शब्द लिखिए।', {
         sheetType: '3-line',
         instruction: 'चल नल पर जल भर — दो अक्षर वाले शब्द लिखिए।',
         comments: 'शिरोरेखा सीधी खींचिए और अक्षरों की बनावट सुंदर रखिए।',
-        sampleText: 'चल  नल  पर  जल  भर'
+        sampleText: ''
       })
     ]
   },
@@ -1040,13 +1040,13 @@ const TUITION_WORKSHEETS = [
     sheetType: 'grid',
     instruction: 'Write numbers 1 to 50 inside the math boxes',
     comments: 'Each number must fit neatly inside a single square grid box.',
-    sampleText: '1  2  3  4  5  6  7  8  9  10',
+    sampleText: '',
     questions: [
       q('tt3q1', 'TUITION_CANVAS', 'Write numbers 1 to 50 inside the math boxes', {
         sheetType: 'grid',
         instruction: 'Write numbers 1 to 50 inside the math boxes',
         comments: 'Each number must fit neatly inside a single square grid box.',
-        sampleText: '1  2  3  4  5  6  7  8  9  10'
+        sampleText: ''
       })
     ]
   },
