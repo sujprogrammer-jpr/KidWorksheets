@@ -184,6 +184,30 @@ function renderSubjectWorksheets(subjectId) {
   const wsList = getWorksheetList(subjectId);
   const progress = getProgress();
 
+  const tracingCardMap = {
+    english: { title: '✏️ English Alphabet Tracing Practice (4-Lines)', desc: 'Practice capital A-Z with accurate 4-line notebook guide', sheet: '4-Line Notebook' },
+    hindi:   { title: '✏️ Hindi Swar & Vyanjan Tracing Practice (3-Lines / 2-Lines)', desc: 'Practice Hindi letters (अ-ह) with शिरोरेखा 3-line guide', sheet: '3-Line Notebook' },
+    maths:   { title: '✏️ Number & Digit Tracing Practice (Math Boxes / Grid)', desc: 'Practice numbers 0-9 inside Math square grid boxes', sheet: 'Math Grid Notebook' },
+    ga:      { title: '✏️ Letter & Number Tracing Practice', desc: 'Trace letters & numbers on lined paper', sheet: 'Interactive Canvas' },
+    art:     { title: '✏️ Freehand Drawing & Tracing Canvas', desc: 'Draw, sketch and trace freely', sheet: 'Blank Canvas' }
+  };
+  const tInfo = tracingCardMap[subjectId] || tracingCardMap.english;
+
+  const tracingHeaderCard = `
+    <div class="tracing-featured-card" onclick="navigate('/child/trace/${subjectId}')" id="btn-trace-featured"
+      style="background:var(--dark-surface-1);border:2px solid var(--primary);border-radius:16px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.2s ease">
+      <div style="font-size:32px;background:${sub.light};width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center">✏️</div>
+      <div style="flex:1">
+        <div style="font-family:Nunito,sans-serif;font-size:16px;font-weight:800;color:var(--dark-text-primary);margin-bottom:4px">${esc(tInfo.title)}</div>
+        <div style="font-family:Nunito,sans-serif;font-size:12px;color:var(--dark-text-secondary);margin-bottom:6px">${esc(tInfo.desc)}</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge badge-easy" style="background:var(--primary);color:white">${tInfo.sheet}</span>
+          <span style="font-size:11px;font-weight:700;color:var(--accent)">⭐ Tracing Worksheet</span>
+        </div>
+      </div>
+      <div style="font-family:Nunito,sans-serif;font-size:13px;font-weight:800;color:var(--primary-light);background:rgba(108,99,255,0.15);padding:8px 14px;border-radius:10px">▶ START</div>
+    </div>`;
+
   const cards = wsList.map((ws, idx) => {
     const p = progress[ws.id];
     const pct = p ? p.pct : 0;
@@ -216,6 +240,7 @@ function renderSubjectWorksheets(subjectId) {
         ${esc(sub.description)} &nbsp;·&nbsp; ${wsList.length} worksheets
       </div>
       <div class="worksheet-list-body">
+        ${tracingHeaderCard}
         ${cards || `<div class="empty-state" style="color:var(--light-text-secondary)"><div class="empty-icon">📭</div><h3>No worksheets yet</h3><p>Ask your mentor to add worksheets!</p></div>`}
       </div>
     </div>
@@ -674,7 +699,6 @@ function endWorksheet() {
 function confirmQuit() {
   if (confirm('Quit this worksheet? Your progress will not be saved.')) navigate('/child');
 }
-
 // ══════════════════════════════════════════════════════════════
 // SCREEN: RESULTS
 // ══════════════════════════════════════════════════════════════
@@ -744,6 +768,7 @@ function spawnConfetti() {
 // ══════════════════════════════════════════════════════════════
 const ENG_LETTERS   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const HINDI_LETTERS = ['अ','आ','इ','ई','उ','ऊ','ए','ऐ','ओ','औ','क','ख','ग','घ','ङ','च','छ','ज','झ','ञ','ट','ठ','ड','ढ','ण','त','थ','द','ध','न','प','फ','ब','भ','म','य','र','ल','व','श','ष','स','ह'];
+const MATH_LETTERS  = ['0','1','2','3','4','5','6','7','8','9'];
 
 // ── Tracing state ─────────────────────────────────────────────
 let _tLang      = 'english';
@@ -768,7 +793,7 @@ let _isRecording   = false;
 const SHEETS = [
   { id:'4-line', label:'📄 4-Line', title:'4-Line (English)' },
   { id:'3-line', label:'📄 3-Line', title:'3-Line (Hindi)' },
-  { id:'2-line', label:'📄 2-Line', title:'2-Line (Mātrā)' },
+  { id:'2-line', label:'📄 2-Line', title:'2-Line (Hindi)' },
   { id:'grid',   label:'🔲 Grid',   title:'Grid (Maths)' },
   { id:'blank',  label:'🎨 Blank',  title:'Blank Canvas' },
 ];
@@ -776,12 +801,21 @@ const DRAW_COLORS = ['#6C63FF','#FF5C5C','#43D9A2','#FF8C42','#FFD93D','#2D2D3A'
 
 // ── Render tracing practice screen ───────────────────────────
 function renderTracingPractice(lang) {
-  _tLang    = lang;
-  _tLetters = lang === 'hindi' ? HINDI_LETTERS : ENG_LETTERS;
+  _tLang = lang || 'english';
+  if (_tLang === 'hindi') {
+    _tLetters = HINDI_LETTERS;
+    _tSheet   = '3-line';
+  } else if (_tLang === 'maths') {
+    _tLetters = MATH_LETTERS;
+    _tSheet   = 'grid';
+  } else {
+    _tLetters = ENG_LETTERS;
+    _tSheet   = '4-line';
+  }
   _tIdx     = 0;
   _tTotal   = 0; _tInBound = 0;
-  const fontFam = lang === 'hindi' ? 'Hind' : 'Nunito';
-  const fs      = lang === 'hindi' ? '16' : '19';
+  const fontFam = _tLang === 'hindi' ? 'Hind' : 'Nunito';
+  const fs      = _tLang === 'hindi' ? '16' : '19';
 
   const letterBtns = _tLetters.map((l, i) => `
     <button class="letter-tile-btn" onclick="loadLetter(${i})" id="lb-${i}"
@@ -795,13 +829,15 @@ function renderTracingPractice(lang) {
     <div class="color-swatch ${c === _tColor ? 'active' : ''}"
       style="background:${c}" onclick="setDrawColor('${c}')" id="sw-${i}" title="${c}"></div>`).join('');
 
+  const pageTitle = _tLang === 'hindi' ? 'Hindi Swar & Vyanjan Tracing' : _tLang === 'maths' ? 'Maths Number & Digit Tracing' : 'English Letter Tracing';
+
   setApp(`
     <div class="tracing-screen screen">
 
       <!-- Top bar -->
       <div class="tracing-top-bar">
         <button class="back-btn" onclick="navigate('/child')" id="btn-back-trace">◀</button>
-        <h1>✏️ Letter Tracing — ${lang === 'hindi' ? 'Hindi' : 'English'}</h1>
+        <h1>✏️ ${pageTitle}</h1>
       </div>
 
       <!-- Controls panel -->
@@ -821,15 +857,15 @@ function renderTracingPractice(lang) {
 
       <!-- Letter grid -->
       <div class="letter-grid-wrap">
-        <label>Tap a Letter to Trace</label>
+        <label>Tap a Character to Trace</label>
         <div class="letter-tile-grid">${letterBtns}</div>
       </div>
 
-      <!-- Canvas area (hidden until letter selected) -->
-      <div id="trace-canvas-wrap" class="trace-canvas-wrap" style="display:none">
+      <!-- Canvas area -->
+      <div id="trace-canvas-wrap" class="trace-canvas-wrap">
         <div class="canvas-top-row">
           <div class="canvas-left-row">
-            <div class="canvas-letter-label" id="trace-label"></div>
+            <div class="canvas-letter-label" id="trace-label">Tracing: "${(_tLetters && _tLetters[0]) ? _tLetters[0] : 'A'}"</div>
             <div class="recording-indicator" id="recording-indicator">
               <div class="rec-dot"></div> REC
             </div>
@@ -845,7 +881,7 @@ function renderTracingPractice(lang) {
         <div class="canvas-box" id="canvas-box">
           <canvas id="trace-canvas" style="height:260px"></canvas>
         </div>
-        <div class="canvas-hint" id="canvas-hint">✏️ Use your finger or stylus to trace the dotted letter</div>
+        <div class="canvas-hint" id="canvas-hint">✏️ Use your finger or stylus to trace inside the guide</div>
 
         <!-- Blank canvas tools (only shown in blank mode) -->
         <div id="blank-tools" style="display:none">
@@ -876,6 +912,8 @@ function renderTracingPractice(lang) {
       <div class="stylus-toast" id="stylus-toast">✏️ Stylus detected! Switched to Pen mode</div>
     </div>
   `);
+
+  loadLetter(0);
 }
 
 function setSheetType(type) {
@@ -883,14 +921,14 @@ function setSheetType(type) {
   document.querySelectorAll('.sheet-pill').forEach(b => b.classList.toggle('active', b.id === `sp-${type}`));
   const blank = document.getElementById('blank-tools');
   if (blank) blank.style.display = type === 'blank' ? 'block' : 'none';
-  if (_tLetters[_tIdx]) initTraceCanvas();
+  initTraceCanvas();
 }
 
 function setInputMode(mode) {
   _tMode = mode;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.id === `mode-${mode}`));
   _tStrokeW = mode === 'pen' ? 3 : 5;
-  if (_tLetters[_tIdx]) initTraceCanvas();
+  initTraceCanvas();
 }
 
 function setDrawColor(color) {
@@ -913,15 +951,14 @@ function toggleEraser() {
 }
 
 function loadLetter(idx) {
-  _tIdx   = idx;
+  _tIdx   = Math.max(0, Math.min((_tLetters ? _tLetters.length - 1 : 0), idx));
   _tTotal = 0; _tInBound = 0;
+  const letter = (_tLetters && _tLetters[_tIdx]) ? _tLetters[_tIdx] : (_tLang === 'hindi' ? 'अ' : _tLang === 'maths' ? '1' : 'A');
   const wrap = document.getElementById('trace-canvas-wrap');
   if (wrap) wrap.style.display = 'block';
   const label = document.getElementById('trace-label');
-  if (label) label.textContent = `Tracing: "${_tLetters[_tIdx]}"`;
-  // Highlight selected letter tile
-  document.querySelectorAll('.letter-tile-btn').forEach((b, i) => b.classList.toggle('selected', i === idx));
-  // Blank canvas tools
+  if (label) label.textContent = `Tracing: "${letter}"`;
+  document.querySelectorAll('.letter-tile-btn').forEach((b, i) => b.classList.toggle('selected', i === _tIdx));
   const blank = document.getElementById('blank-tools');
   if (blank) blank.style.display = _tSheet === 'blank' ? 'block' : 'none';
   initTraceCanvas();
@@ -930,8 +967,9 @@ function loadLetter(idx) {
 function nextTraceLetter() {
   _tIdx   = (_tIdx + 1) % _tLetters.length;
   _tTotal = 0; _tInBound = 0;
+  const letter = _tLetters[_tIdx] || 'A';
   const label = document.getElementById('trace-label');
-  if (label) label.textContent = `Tracing: "${_tLetters[_tIdx]}"`;
+  if (label) label.textContent = `Tracing: "${letter}"`;
   document.querySelectorAll('.letter-tile-btn').forEach((b, i) => b.classList.toggle('selected', i === _tIdx));
   initTraceCanvas();
 }
@@ -942,149 +980,184 @@ function drawSheetLines(ctx, W, H) {
   ctx.fillStyle = '#FEFCF7';
   ctx.fillRect(0, 0, W, H);
 
+  // Vertical margin line (like standard Indian school notebooks)
+  const marginX = 40;
+  if (_tSheet !== 'blank') {
+    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
+  }
+
   if (_tSheet === '4-line') {
-    // headline 20%, waistline 50%, baseline 75%, footline 95%
+    // 4-line English notebook: Red headline, Blue dashed waistline, Blue baseline, Red footline
+    const y1 = H * 0.18, y2 = H * 0.42, y3 = H * 0.66, y4 = H * 0.90;
     const lines = [
-      { y: H * 0.20, solid: true,  color: '#6CB4F5', width: 1.5 },
-      { y: H * 0.50, solid: false, color: '#6CB4F5', width: 1 },
-      { y: H * 0.75, solid: true,  color: '#6CB4F5', width: 1.5 },
-      { y: H * 0.95, solid: false, color: '#6CB4F5', width: 1 },
+      { y: y1, solid: true,  color: '#FF4B4B', width: 2 },   // Top Headline (Red)
+      { y: y2, solid: false, color: '#2B7FFF', width: 1.5 }, // Mid Waistline (Blue dash)
+      { y: y3, solid: true,  color: '#2B7FFF', width: 2 },   // Baseline (Blue)
+      { y: y4, solid: true,  color: '#FF4B4B', width: 2 },   // Footline (Red)
     ];
     lines.forEach(l => {
       ctx.strokeStyle = l.color; ctx.lineWidth = l.width;
-      ctx.setLineDash(l.solid ? [] : [5, 4]);
+      ctx.setLineDash(l.solid ? [] : [6, 4]);
       ctx.beginPath(); ctx.moveTo(0, l.y); ctx.lineTo(W, l.y); ctx.stroke();
     });
     ctx.setLineDash([]);
   } else if (_tSheet === '3-line') {
-    // headline (shirorékha) 15%, middle guide dashed 55%, base 80%
+    // 3-line Hindi notebook: Red top Shiro-rekha line, Blue dashed midline, Red baseline
+    const y1 = H * 0.18, y2 = H * 0.45, y3 = H * 0.72;
     const lines = [
-      { y: H * 0.15, solid: true,  color: '#D32F2F', width: 2 },   // शिरोरेखा — red
-      { y: H * 0.55, solid: false, color: '#BDBDBD', width: 1 },   // middle guide — gray dash
-      { y: H * 0.80, solid: true,  color: '#D32F2F', width: 1.5 }, // baseline — red
+      { y: y1, solid: true,  color: '#E53935', width: 2.5 }, // शिरोरेखा — Red
+      { y: y2, solid: false, color: '#2B7FFF', width: 1.5 }, // Mid guide — Blue dash
+      { y: y3, solid: true,  color: '#E53935', width: 2 },   // Baseline — Red
     ];
     lines.forEach(l => {
       ctx.strokeStyle = l.color; ctx.lineWidth = l.width;
-      ctx.setLineDash(l.solid ? [] : [4, 5]);
+      ctx.setLineDash(l.solid ? [] : [5, 5]);
       ctx.beginPath(); ctx.moveTo(0, l.y); ctx.lineTo(W, l.y); ctx.stroke();
     });
     ctx.setLineDash([]);
   } else if (_tSheet === '2-line') {
-    // Two red solid lines
-    [H * 0.25, H * 0.78].forEach(y => {
-      ctx.strokeStyle = '#D32F2F'; ctx.lineWidth = 1.5;
+    // Two Red solid lines
+    [H * 0.22, H * 0.78].forEach(y => {
+      ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2;
       ctx.setLineDash([]);
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     });
   } else if (_tSheet === 'grid') {
-    const cell = 40;
-    ctx.strokeStyle = '#B0BEC5'; ctx.lineWidth = 0.75; ctx.setLineDash([]);
+    // Maths Box notebook: Square grid boxes with central math target box
+    const cell = 60;
+    ctx.strokeStyle = '#B0BEC5'; ctx.lineWidth = 1; ctx.setLineDash([]);
     for (let x = 0; x <= W; x += cell) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
     }
     for (let y = 0; y <= H; y += cell) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
+    // Highlight central math box
+    const boxW = 100, boxH = 120;
+    const bx = W / 2 - boxW / 2, by = H / 2 - boxH / 2;
+    ctx.strokeStyle = '#FF8C42'; ctx.lineWidth = 2.5;
+    ctx.strokeRect(bx, by, boxW, boxH);
   } else {
-    // blank — clean white, already filled
-    ctx.fillStyle = 'white';
+    // Blank
+    ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, W, H);
   }
 }
 
 // ── Draw letter guide at correct position for sheet ───────────
 function drawLetterGuide(ctx, letter, W, H) {
-  if (_tSheet === 'blank') return; // no guide on blank canvas
+  if (_tSheet === 'blank') return;
   const isHindi = _tLang === 'hindi';
   const fontFam = isHindi ? 'Hind' : 'Nunito';
 
-  // Determine vertical center for each sheet type
-  let cy;
-  if (_tSheet === '4-line')      cy = H * 0.475; // between waistline and baseline
-  else if (_tSheet === '3-line') cy = H * 0.475; // between shirorékha and base
-  else if (_tSheet === '2-line') cy = H * 0.52;
-  else if (_tSheet === 'grid')   cy = H * 0.5;
-  else                           cy = H * 0.5;
+  let yBase, fs;
 
-  // Font size scales to fit writing zone height
-  let zoneH;
-  if (_tSheet === '4-line')      zoneH = H * 0.55;
-  else if (_tSheet === '3-line') zoneH = H * 0.65;
-  else if (_tSheet === '2-line') zoneH = H * 0.53;
-  else if (_tSheet === 'grid')   zoneH = Math.min(H * 0.6, 80);
-  else                           zoneH = H * 0.7;
-
-  const fs = Math.min(W * 0.45, zoneH * 1.1, 160);
+  if (_tSheet === '4-line') {
+    // English 4-Line Notebook: Capital letters sit ON Line 3 (Blue baseline) and touch Line 1 (Red headline)
+    const y1 = H * 0.18; // Red Top Line
+    const y3 = H * 0.66; // Blue Baseline
+    const bandH = y3 - y1;
+    yBase = y3;
+    fs = Math.min(bandH / 0.72, W * 0.45);
+  } else if (_tSheet === '3-line') {
+    // Hindi 3-Line Notebook: Hindi letters sit between Top Shiro-rekha line and Baseline
+    const y1 = H * 0.18;
+    const y3 = H * 0.72;
+    const bandH = y3 - y1;
+    yBase = y3;
+    fs = Math.min(bandH / 0.75, W * 0.45);
+  } else if (_tSheet === '2-line') {
+    // Hindi 2-Line Notebook: Sits between two red lines
+    const y1 = H * 0.22;
+    const y2 = H * 0.78;
+    const bandH = y2 - y1;
+    yBase = y2;
+    fs = Math.min(bandH / 0.72, W * 0.45);
+  } else if (_tSheet === 'grid') {
+    // Maths Grid Notebook: Fits inside central Math box
+    const boxH = 120;
+    yBase = H / 2 + boxH / 2 - 12;
+    fs = Math.min(boxH * 0.78, W * 0.35);
+  } else {
+    yBase = H * 0.70;
+    fs = Math.min(H * 0.5, W * 0.45);
+  }
 
   ctx.font = `bold ${fs}px '${fontFam}', sans-serif`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
 
   // Dotted guide stroke
   ctx.save();
-  ctx.setLineDash([5, 7]);
-  ctx.strokeStyle = '#C4B5FD'; ctx.lineWidth = 5;
-  ctx.strokeText(letter, W / 2, cy);
+  ctx.setLineDash([6, 6]);
+  ctx.strokeStyle = '#6C63FF'; ctx.lineWidth = 5;
+  ctx.strokeText(letter, W / 2, yBase);
   ctx.restore();
 
   // Faint fill
-  ctx.fillStyle = 'rgba(196,181,253,0.2)';
-  ctx.fillText(letter, W / 2, cy);
+  ctx.fillStyle = 'rgba(108, 99, 255, 0.15)';
+  ctx.fillText(letter, W / 2, yBase);
 
   // Start-here hint
   ctx.fillStyle = '#FF8C42';
-  ctx.font = 'bold 12px Nunito, sans-serif';
+  ctx.font = 'bold 13px Nunito, sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('▶ Start here', 10, 18);
+  ctx.textBaseline = 'top';
+  ctx.fillText('▶ Start here', 12, 10);
 }
 
 // ── Build BFS tolerance map ───────────────────────────────────
-// Returns null for blank canvas (no boundary checking)
 function buildToleranceMap(letter, W, H) {
   if (_tSheet === 'blank') { _tTolMap = null; return; }
 
-  const isHindi  = _tLang === 'hindi';
-  const fontFam  = isHindi ? 'Hind' : 'Nunito';
-  const tolerance = _tMode === 'pen' ? 20 : 28;
+  const isHindi   = _tLang === 'hindi';
+  const fontFam   = isHindi ? 'Hind' : 'Nunito';
+  const tolerance = _tMode === 'pen' ? 35 : 45;
 
-  // Offscreen canvas — draw letter solid black, no background
   const oc  = document.createElement('canvas');
   oc.width  = W; oc.height = H;
   const oct = oc.getContext('2d');
 
-  // Determine cy (same logic as drawLetterGuide)
-  let cy;
-  if (_tSheet === '4-line')      cy = H * 0.475;
-  else if (_tSheet === '3-line') cy = H * 0.475;
-  else if (_tSheet === '2-line') cy = H * 0.52;
-  else if (_tSheet === 'grid')   cy = H * 0.5;
-  else                           cy = H * 0.5;
-
-  let zoneH;
-  if (_tSheet === '4-line')      zoneH = H * 0.55;
-  else if (_tSheet === '3-line') zoneH = H * 0.65;
-  else if (_tSheet === '2-line') zoneH = H * 0.53;
-  else if (_tSheet === 'grid')   zoneH = Math.min(H * 0.6, 80);
-  else                           zoneH = H * 0.7;
-
-  const fs = Math.min(W * 0.45, zoneH * 1.1, 160);
+  let yBase, fs;
+  if (_tSheet === '4-line') {
+    const y1 = H * 0.18, y3 = H * 0.66;
+    yBase = y3; fs = Math.min((y3 - y1) / 0.72, W * 0.45);
+  } else if (_tSheet === '3-line') {
+    const y1 = H * 0.18, y3 = H * 0.72;
+    yBase = y3; fs = Math.min((y3 - y1) / 0.75, W * 0.45);
+  } else if (_tSheet === '2-line') {
+    const y1 = H * 0.22, y2 = H * 0.78;
+    yBase = y2; fs = Math.min((y2 - y1) / 0.72, W * 0.45);
+  } else if (_tSheet === 'grid') {
+    const boxH = 120; yBase = H / 2 + boxH / 2 - 12; fs = Math.min(boxH * 0.78, W * 0.35);
+  } else {
+    yBase = H * 0.70; fs = Math.min(H * 0.5, W * 0.45);
+  }
 
   oct.font = `bold ${fs}px '${fontFam}', sans-serif`;
-  oct.textAlign = 'center'; oct.textBaseline = 'middle';
+  oct.textAlign = 'center'; oct.textBaseline = 'alphabetic';
   oct.fillStyle = '#000000';
-  oct.fillText(letter, W / 2, cy);
-  // Stroke too — gives extra thickness for tracing zone
+  oct.fillText(letter, W / 2, yBase);
   oct.strokeStyle = '#000000'; oct.lineWidth = tolerance * 0.4; oct.setLineDash([]);
-  oct.strokeText(letter, W / 2, cy);
+  oct.strokeText(letter, W / 2, yBase);
 
   const imgData = oct.getImageData(0, 0, W, H).data;
 
-  // Mark letter pixels
+  let count = 0;
   const src = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) {
-    if (imgData[i * 4 + 3] > 20) src[i] = 1;
+    if (imgData[i * 4 + 3] > 20) {
+      src[i] = 1;
+      count++;
+    }
   }
 
-  // BFS dilation from all letter pixels
+  if (count < 20) {
+    _tTolMap = null;
+    return;
+  }
+
   const dist = new Int16Array(W * H).fill(32767);
   const queue = [];
   for (let i = 0; i < W * H; i++) {
@@ -1092,7 +1165,6 @@ function buildToleranceMap(letter, W, H) {
   }
 
   let head = 0;
-  const dirs = [-W, W, -1, 1];
   while (head < queue.length) {
     const idx = queue[head++];
     const d   = dist[idx] + 1;
@@ -1123,7 +1195,7 @@ function initTraceCanvas() {
   const canvas = document.getElementById('trace-canvas');
   if (!canvas) return;
 
-  const letter  = _tLetters[_tIdx] || 'A';
+  const letter  = (_tLetters && _tLetters[_tIdx]) ? _tLetters[_tIdx] : (_tLang === 'hindi' ? 'अ' : _tLang === 'maths' ? '1' : 'A');
   const W       = Math.max(canvas.clientWidth || 480, 200);
   const H       = 260;
   canvas.width  = W; canvas.height = H;
@@ -2258,132 +2330,8 @@ function renderReadAndAnswer(q) {
 }
 
 
-function loadLetter(lang, idx) {
-  _tLang = lang;
-  _tLetters = lang === 'hindi' ? HINDI_LETTERS : ENG_LETTERS;
-  _tIdx = idx;
 
-  const canvasArea = document.getElementById('canvas-area');
-  const label = document.getElementById('trace-label');
-  if (canvasArea) canvasArea.style.display = 'block';
-  if (label) label.textContent = `Tracing: "${_tLetters[_tIdx]}"`;
 
-  initTraceCanvas();
-}
-
-function nextTraceLetter() {
-  _tIdx = (_tIdx + 1) % _tLetters.length;
-  const label = document.getElementById('trace-label');
-  if (label) label.textContent = `Tracing: "${_tLetters[_tIdx]}"`;
-  initTraceCanvas();
-}
-
-function initTraceCanvas() {
-  const canvas = document.getElementById('trace-canvas');
-  if (!canvas) return;
-  const letter = _tLetters[_tIdx];
-  const isHindi = _tLang === 'hindi';
-
-  const W = canvas.clientWidth || 480;
-  const H = 280;
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.height = H + 'px';
-
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-
-  function drawGuide() {
-    ctx.clearRect(0, 0, W, H);
-    // Lined paper bg
-    ctx.fillStyle = '#FEFCF7';
-    ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = '#E8DFC8'; ctx.lineWidth = 1;
-    for (let y = 40; y < H; y += 40) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-    }
-    // Letter guide — dotted
-    const fs = Math.min(W * 0.48, 170);
-    ctx.font = `bold ${fs}px '${isHindi ? 'Hind' : 'Nunito'}', sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.save();
-    ctx.setLineDash([5, 7]);
-    ctx.strokeStyle = '#C4B5FD'; ctx.lineWidth = 5;
-    ctx.strokeText(letter, W / 2, H / 2 + 8);
-    ctx.restore();
-    ctx.fillStyle = 'rgba(196,181,253,0.18)';
-    ctx.fillText(letter, W / 2, H / 2 + 8);
-    // Hint arrow
-    ctx.fillStyle = '#FF8C42';
-    ctx.font = 'bold 13px Nunito, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('▶ Start here', 12, 22);
-  }
-
-  drawGuide();
-
-  // Replace canvas node to remove stale listeners
-  const fresh = canvas.cloneNode(false);
-  fresh.id = 'trace-canvas';
-  fresh.width = canvas.width; fresh.height = canvas.height;
-  fresh.style.cssText = canvas.style.cssText;
-  canvas.parentNode.replaceChild(fresh, canvas);
-
-  const fc = fresh;
-  const fctx = fc.getContext('2d');
-  fctx.scale(dpr, dpr);
-  fctx.clearRect(0, 0, W, H);
-  drawGuide.call({ _c: fc, _ctx: fctx });
-  // Re-draw guide on fresh canvas
-  fctx.clearRect(0, 0, W, H);
-  fctx.fillStyle = '#FEFCF7'; fctx.fillRect(0, 0, W, H);
-  fctx.strokeStyle = '#E8DFC8'; fctx.lineWidth = 1;
-  for (let y = 40; y < H; y += 40) {
-    fctx.beginPath(); fctx.moveTo(0, y); fctx.lineTo(W, y); fctx.stroke();
-  }
-  const fs2 = Math.min(W * 0.48, 170);
-  fctx.font = `bold ${fs2}px '${isHindi ? 'Hind' : 'Nunito'}', sans-serif`;
-  fctx.textAlign = 'center'; fctx.textBaseline = 'middle';
-  fctx.save(); fctx.setLineDash([5, 7]);
-  fctx.strokeStyle = '#C4B5FD'; fctx.lineWidth = 5;
-  fctx.strokeText(letter, W / 2, H / 2 + 8); fctx.restore();
-  fctx.fillStyle = 'rgba(196,181,253,0.18)'; fctx.fillText(letter, W / 2, H / 2 + 8);
-  fctx.fillStyle = '#FF8C42'; fctx.font = 'bold 13px Nunito,sans-serif';
-  fctx.textAlign = 'left'; fctx.fillText('▶ Start here', 12, 22);
-
-  // Drawing mechanics
-  let drawing = false, lx = 0, ly = 0;
-  function pos(e) {
-    const r = fc.getBoundingClientRect();
-    const sx = W / r.width, sy = H / r.height;
-    if (e.touches) return { x:(e.touches[0].clientX - r.left)*sx, y:(e.touches[0].clientY - r.top)*sy };
-    return { x:(e.clientX - r.left)*sx, y:(e.clientY - r.top)*sy };
-  }
-  function stroke(x, y) {
-    fctx.beginPath(); fctx.moveTo(lx, ly); fctx.lineTo(x, y);
-    fctx.strokeStyle = '#6C63FF'; fctx.lineWidth = 5;
-    fctx.lineCap = 'round'; fctx.lineJoin = 'round'; fctx.stroke();
-    lx = x; ly = y;
-  }
-
-  fc.addEventListener('mousedown', e => { e.preventDefault(); drawing=true; const p=pos(e); lx=p.x; ly=p.y; });
-  fc.addEventListener('mousemove', e => { if(!drawing)return; const p=pos(e); stroke(p.x,p.y); });
-  fc.addEventListener('mouseup', () => drawing=false);
-  fc.addEventListener('mouseleave', () => drawing=false);
-  fc.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; const p=pos(e); lx=p.x; ly=p.y; }, {passive:false});
-  fc.addEventListener('touchmove',  e => { if(!drawing)return; e.preventDefault(); const p=pos(e); stroke(p.x,p.y); }, {passive:false});
-  fc.addEventListener('touchend', () => drawing=false);
-
-  // Store ctx for clear
-  window._traceCtx = { ctx: fctx, W, H, letter, isHindi, dpr };
-}
-
-function clearCanvas() {
-  const fc = document.getElementById('trace-canvas');
-  if (!fc) return;
-  initTraceCanvas(); // re-init redraws the guide
-}
 
 // Note: Mentor views (renderMentorDashboard, renderMentorSubject, renderBuilder, renderPrint) are provided by mentor.js
 

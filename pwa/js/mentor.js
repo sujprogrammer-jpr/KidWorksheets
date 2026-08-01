@@ -126,6 +126,26 @@ function renderMentorSubject(subjectId) {
   const list = getWorksheetList(subjectId);
   const prog = getProgress();
 
+  const tracingCardMap = {
+    english: { title: '✏️ English Alphabet Tracing Worksheet (4-Lines)', desc: '4-Line English Notebook Tracing Module', sheet: '4-Line Notebook' },
+    hindi:   { title: '✏️ Hindi Swar & Vyanjan Tracing Worksheet (3-Lines / 2-Lines)', desc: '3-Line / 2-Line Hindi Notebook Tracing Module', sheet: '3-Line Notebook' },
+    maths:   { title: '✏️ Number & Digit Tracing Worksheet (Math Boxes / Grid)', desc: 'Math Grid Box Tracing Module', sheet: 'Math Grid Notebook' },
+    ga:      { title: '✏️ Letter & Number Tracing Practice', desc: 'Interactive Lined Paper Tracing Module', sheet: 'Interactive Canvas' },
+    art:     { title: '✏️ Freehand Drawing & Tracing Canvas', desc: 'Blank Canvas Drawing & Tracing Module', sheet: 'Blank Canvas' }
+  };
+  const tInfo = tracingCardMap[subjectId] || tracingCardMap.english;
+
+  const tracingRow = `
+    <div class="mentor-ws-row" style="border:2px solid var(--primary);background:var(--dark-surface-2)">
+      <div class="mwr-info">
+        <div class="mwr-title" style="color:var(--primary-light);font-weight:800">${esc(tInfo.title)}</div>
+        <div class="mwr-meta">${esc(tInfo.desc)} · <span class="badge badge-easy" style="background:var(--primary);color:white">${tInfo.sheet}</span></div>
+      </div>
+      <div class="mwr-actions">
+        <button onclick="navigate('/child/trace/${subjectId}')" id="mtr-${subjectId}">✏️ Open Practice</button>
+      </div>
+    </div>`;
+
   const rows = list.map(ws => {
     const p   = prog[ws.id];
     const pct = p ? p.pct : null;
@@ -156,7 +176,10 @@ function renderMentorSubject(subjectId) {
         <button class="btn btn-primary btn-sm" onclick="navigate('/mentor/builder')" id="btn-add-msub">+ New</button>
       </div>
       <div class="mentor-body">
-        <div class="mentor-ws-list">${rows}</div>
+        <div class="mentor-ws-list">
+          ${tracingRow}
+          ${rows}
+        </div>
       </div>
     </div>
   `);
