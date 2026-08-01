@@ -44,6 +44,8 @@ const SUBJECTS = {
 function q(id, type, text, opts) {
   return { id, type, text, ...opts, marks: opts.marks || 1 };
 }
+// Expose globally so data2.js (loaded separately) can also use it
+if (typeof window !== 'undefined') window.q = q;
 
 // ── ENGLISH WORKSHEETS (9) ───────────────────────────────────────────────────
 
@@ -646,13 +648,344 @@ const ART_WORKSHEETS = [
 ]; // end ART_WORKSHEETS
 
 // ── Combine all worksheets ───────────────────────────────────────────────────
+// ── ✨ INTERACTIVE WORKSHEETS — Phase 1 (New Question Types) ─────────────────
+// These showcase all 10 new interactive question types across all subjects.
+
+const INTERACTIVE_WORKSHEETS = [
+
+  // ── ENGLISH: Match & Circle ─────────────────────────────────────────────────
+  {
+    id: 'int_eng_001', subject: 'english', title: '✨ Match & Circle — English',
+    topic: 'Interactive', difficulty: 'easy', estimatedTime: 12,
+    description: 'Match animals to their sounds, circle vowels, find word endings!',
+    questions: [
+      // MATCH
+      q('ie1q1','MATCH','Match each animal to the sound it makes.',{
+        pairs:[
+          {left:'🐄 Cow',  right:'Moo'},
+          {left:'🐑 Sheep',right:'Baa'},
+          {left:'🐸 Frog', right:'Croak'},
+          {left:'🦁 Lion', right:'Roar'},
+        ]
+      }),
+      // CIRCLE_FIND — vowels
+      q('ie1q2','CIRCLE_FIND','Tap (circle) all the VOWELS!',{
+        items:['A','B','E','C','I','D','O','F','U','G'],
+        correctItems:['A','E','I','O','U']
+      }),
+      // CIRCLE_FIND — CVC words
+      q('ie1q3','CIRCLE_FIND','Tap all the CVC words (3-letter short vowel words)!',{
+        items:['cat','bread','dog','street','hat','blue','pig','train','cup','bus'],
+        correctItems:['cat','dog','hat','pig','cup','bus']
+      }),
+      // DRAG_SLOT — articles
+      q('ie1q4','DRAG_SLOT','Fill in the correct article: [BLANK] apple is on the table.',{
+        text:'[BLANK] apple is on the table.',
+        slots:[{answer:'An'}],
+        options:['A','An','The','Some']
+      }),
+      q('ie1q5','DRAG_SLOT','Fill in the correct article: [BLANK] dog is barking.',{
+        text:'[BLANK] dog is barking.',
+        slots:[{answer:'A'}],
+        options:['A','An','Some','Many']
+      }),
+      // SEQUENCE_NEXT — alphabet
+      q('ie1q6','SEQUENCE_NEXT','Write the NEXT letters in the alphabet.',{
+        given:['P','Q','R'],
+        answers:['S','T'],
+        options:['S','T','U'],
+        distractors:['X','M']
+      }),
+      // SEQUENCE_PREV — alphabet
+      q('ie1q7','SEQUENCE_PREV','Write the PREVIOUS letters in the alphabet.',{
+        given:['F','G','H'],
+        answers:['D','E'],
+        options:['D','E'],
+        distractors:['A','K']
+      }),
+      // UNSCRAMBLE
+      q('ie1q8','UNSCRAMBLE','Unscramble the letters to make a word! 🐕',{
+        scrambled:['O','D','G'],
+        answer:'DOG',
+        hint:'A pet that barks'
+      }),
+      // WORD_FIRST_LETTER
+      q('ie1q9','WORD_FIRST_LETTER','Tap the correct FIRST letter to complete: ___AT',{
+        wordWithBlank:'___AT',
+        options:['C','B','F','D','H'],
+        answer:'C',
+        completeWord:'CAT'
+      }),
+      // WORD_LAST_LETTER
+      q('ie1q10','WORD_LAST_LETTER','Tap the correct LAST letter to complete: CA___',{
+        wordWithBlank:'CA___',
+        options:['T','N','R','P','S'],
+        answer:'T',
+        completeWord:'CAT'
+      }),
+    ]
+  },
+
+  // ── ENGLISH: Word Build ─────────────────────────────────────────────────────
+  {
+    id: 'int_eng_002', subject: 'english', title: '✨ Spell the Word!',
+    topic: 'Interactive', difficulty: 'easy', estimatedTime: 10,
+    description: 'Build words by tapping the correct letters in order!',
+    questions: [
+      q('ie2q1','WORD_BUILD','Tap the letters to spell the word for this picture! 🐕',{
+        picture:'🐕',letterPool:['D','O','X','G','A'],answer:'DOG'
+      }),
+      q('ie2q2','WORD_BUILD','Tap the letters to spell the word for this picture! 🐱',{
+        picture:'🐱',letterPool:['C','A','T','E','B'],answer:'CAT'
+      }),
+      q('ie2q3','WORD_BUILD','Tap the letters to spell the word for this picture! 🐘',{
+        picture:'🐘',letterPool:['E','L','A','P','H','N','T','O'],answer:'ELEPHANT'
+      }),
+      q('ie2q4','WORD_BUILD','Tap the letters to spell the word for this picture! 🦁',{
+        picture:'🦁',letterPool:['L','I','O','N','A','E'],answer:'LION'
+      }),
+      q('ie2q5','UNSCRAMBLE','Unscramble the letters to spell a fruit! 🍎',{
+        scrambled:['P','P','A','L','E'],answer:'APPLE',hint:'A red fruit'
+      }),
+      q('ie2q6','UNSCRAMBLE','Unscramble to make an animal! 🐸',{
+        scrambled:['R','F','O','G'],answer:'FROG',hint:'It jumps and says croak!'
+      }),
+      q('ie2q7','WORD_FIRST_LETTER','Tap the correct FIRST letter: ___OG',{
+        wordWithBlank:'___OG',options:['D','B','L','H','F'],answer:'D',completeWord:'DOG'
+      }),
+      q('ie2q8','WORD_LAST_LETTER','Tap the correct LAST letter: PI___',{
+        wordWithBlank:'PI___',options:['G','N','T','M','S'],answer:'G',completeWord:'PIG'
+      }),
+      q('ie2q9','WORD_FIRST_LETTER','Tap the correct FIRST letter: ___UN',{
+        wordWithBlank:'___UN',options:['S','R','B','G','T'],answer:'S',completeWord:'SUN'
+      }),
+      q('ie2q10','WORD_LAST_LETTER','Tap the correct LAST letter: FRO___',{
+        wordWithBlank:'FRO___',options:['G','N','T','B','K'],answer:'G',completeWord:'FROG'
+      }),
+    ]
+  },
+
+  // ── MATHS: Arrange & Sequence ───────────────────────────────────────────────
+  {
+    id: 'int_maths_001', subject: 'maths', title: '✨ Order & Sequence Numbers',
+    topic: 'Interactive', difficulty: 'medium', estimatedTime: 12,
+    description: 'Arrange numbers in order, fill in the missing numbers!',
+    questions: [
+      // ARRANGE — ascending
+      q('im1q1','ARRANGE','Arrange these numbers in ASCENDING order (smallest to biggest).',{
+        items:['8','3','15','1','22'],
+        correctOrder:['1','3','8','15','22']
+      }),
+      // ARRANGE — descending
+      q('im1q2','ARRANGE','Arrange these numbers in DESCENDING order (biggest to smallest).',{
+        items:['5','12','3','20','7'],
+        correctOrder:['20','12','7','5','3']
+      }),
+      // SEQUENCE_NEXT
+      q('im1q3','SEQUENCE_NEXT','Write the NEXT numbers.',{
+        given:['15','16','17'],
+        answers:['18','19'],
+        options:['18','19','20'],
+        distractors:['14','21']
+      }),
+      q('im1q4','SEQUENCE_NEXT','Write the NEXT numbers.',{
+        given:['45','46','47'],
+        answers:['48','49'],
+        options:['48','49','50'],
+        distractors:['44','47']
+      }),
+      // SEQUENCE_PREV
+      q('im1q5','SEQUENCE_PREV','Write the PREVIOUS numbers.',{
+        given:['23','24','25'],
+        answers:['21','22'],
+        options:['21','22'],
+        distractors:['26','27']
+      }),
+      // DRAG_SLOT — greater/less/equal
+      q('im1q6','DRAG_SLOT','15 [BLANK] 8 (Use >, < or =)',{
+        text:'15 [BLANK] 8',
+        slots:[{answer:'>'}],
+        options:['>','<','=']
+      }),
+      q('im1q7','DRAG_SLOT','7 [BLANK] 7 (Use >, < or =)',{
+        text:'7 [BLANK] 7',
+        slots:[{answer:'='}],
+        options:['>','<','=']
+      }),
+      q('im1q8','DRAG_SLOT','4 [BLANK] 12 (Use >, < or =)',{
+        text:'4 [BLANK] 12',
+        slots:[{answer:'<'}],
+        options:['>','<','=']
+      }),
+      // ARRANGE — numbers
+      q('im1q9','ARRANGE','Arrange in ASCENDING order.',{
+        items:['30','10','50','20','40'],
+        correctOrder:['10','20','30','40','50']
+      }),
+      q('im1q10','SEQUENCE_NEXT','Fill the missing numbers: 96, 97, 98, ___, ___',{
+        given:['96','97','98'],
+        answers:['99','100'],
+        options:['99','100'],
+        distractors:['101','95']
+      }),
+    ]
+  },
+
+  // ── GENERAL AWARENESS: Match Animals ────────────────────────────────────────
+  {
+    id: 'int_ga_001', subject: 'ga', title: '✨ Animal Matching & Sorting',
+    topic: 'Interactive', difficulty: 'easy', estimatedTime: 12,
+    description: 'Match animals to their homes, sounds, and young ones!',
+    questions: [
+      // MATCH — animals → sounds
+      q('ig1q1','MATCH','Match each animal to the sound it makes.',{
+        pairs:[
+          {left:'🐄 Cow',  right:'Moo'},
+          {left:'🐕 Dog',  right:'Woof'},
+          {left:'🐱 Cat',  right:'Meow'},
+          {left:'🐄 Frog', right:'Croak'},
+        ]
+      }),
+      // MATCH — animals → homes
+      q('ig1q2','MATCH','Match each animal to its home.',{
+        pairs:[
+          {left:'🐝 Bee',   right:'Hive'},
+          {left:'🐦 Bird',  right:'Nest'},
+          {left:'🐟 Fish',  right:'Water'},
+          {left:'🦁 Lion',  right:'Den'},
+        ]
+      }),
+      // CIRCLE_FIND — farm animals
+      q('ig1q3','CIRCLE_FIND','Tap all the FARM animals!',{
+        items:['🐄 Cow','🦁 Lion','🐑 Sheep','🐯 Tiger','🐔 Hen','🐘 Elephant','🐎 Horse','🦒 Giraffe','🐖 Pig','🐬 Dolphin'],
+        correctItems:['🐄 Cow','🐑 Sheep','🐔 Hen','🐎 Horse','🐖 Pig']
+      }),
+      // CIRCLE_FIND — wild animals
+      q('ig1q4','CIRCLE_FIND','Tap all the WILD animals!',{
+        items:['🐄 Cow','🦁 Lion','🐑 Sheep','🐯 Tiger','🐔 Hen','🐘 Elephant','🦒 Giraffe','🐖 Pig'],
+        correctItems:['🦁 Lion','🐯 Tiger','🐘 Elephant','🦒 Giraffe']
+      }),
+      // MATCH — young ones
+      q('ig1q5','MATCH','Match each animal to its young one.',{
+        pairs:[
+          {left:'🐄 Cow',  right:'Calf'},
+          {left:'🐕 Dog',  right:'Puppy'},
+          {left:'🐱 Cat',  right:'Kitten'},
+          {left:'🐑 Sheep',right:'Lamb'},
+        ]
+      }),
+      // ARRANGE — alphabetical order of animals
+      q('ig1q6','ARRANGE','Arrange these animals in ALPHABETICAL order.',{
+        items:['Lion','Frog','Ant','Dog','Bear'],
+        correctOrder:['Ant','Bear','Dog','Frog','Lion']
+      }),
+      // DRAG_SLOT
+      q('ig1q7','DRAG_SLOT','A group of fish is called a [BLANK].',{
+        text:'A group of fish is called a [BLANK].',
+        slots:[{answer:'school'}],
+        options:['school','flock','pride','herd']
+      }),
+      q('ig1q8','DRAG_SLOT','A group of lions is called a [BLANK].',{
+        text:'A group of lions is called a [BLANK].',
+        slots:[{answer:'pride'}],
+        options:['school','flock','pride','herd']
+      }),
+      q('ig1q9','CIRCLE_FIND','Tap all the WATER animals!',{
+        items:['🐬 Dolphin','🦁 Lion','🐟 Fish','🐄 Cow','🦈 Shark','🐔 Hen','🐙 Octopus','🐎 Horse'],
+        correctItems:['🐬 Dolphin','🐟 Fish','🦈 Shark','🐙 Octopus']
+      }),
+      q('ig1q10','MATCH','Match each animal to its food.',{
+        pairs:[
+          {left:'🐄 Cow',  right:'Grass'},
+          {left:'🐱 Cat',  right:'Fish'},
+          {left:'🐦 Bird', right:'Seeds'},
+          {left:'🐕 Dog',  right:'Bones'},
+        ]
+      }),
+    ]
+  },
+
+  // ── HINDI: Match & Sequence ──────────────────────────────────────────────────
+  {
+    id: 'int_hindi_001', subject: 'hindi', title: '✨ हिंदी — मिलान और क्रम',
+    topic: 'Interactive', difficulty: 'easy', estimatedTime: 12,
+    description: 'स्वर और व्यंजन — मिलाओ, पहचानो और क्रम लगाओ!',
+    questions: [
+      // MATCH — swar to their category
+      q('ih1q1','MATCH','स्वरों को मिलाओ।',{
+        pairs:[
+          {left:'अ',right:'पहला स्वर'},
+          {left:'आ',right:'दूसरा स्वर'},
+          {left:'इ',right:'तीसरा स्वर'},
+          {left:'ई',right:'चौथा स्वर'},
+        ]
+      }),
+      // CIRCLE_FIND — swar
+      q('ih1q2','CIRCLE_FIND','सभी स्वर (vowels) पर टैप करो!',{
+        items:['अ','क','आ','ख','इ','ग','ई','घ','उ','ङ'],
+        correctItems:['अ','आ','इ','ई','उ']
+      }),
+      // ARRANGE — vyanjan order
+      q('ih1q3','ARRANGE','इन व्यंजनों को सही क्रम में लगाओ।',{
+        items:['ग','क','घ','ख','ङ'],
+        correctOrder:['क','ख','ग','घ','ङ']
+      }),
+      // SEQUENCE_NEXT
+      q('ih1q4','SEQUENCE_NEXT','अगले स्वर लिखो।',{
+        given:['अ','आ','इ'],
+        answers:['ई','उ'],
+        options:['ई','उ','ऊ'],
+        distractors:['ए','क']
+      }),
+      // CIRCLE_FIND — long vowels (deergh swar)
+      q('ih1q5','CIRCLE_FIND','दीर्घ स्वर (long vowels) पर टैप करो!',{
+        items:['अ','आ','इ','ई','उ','ऊ','ए','ऐ'],
+        correctItems:['आ','ई','ऊ','ऐ']
+      }),
+      // MATCH — matra to word
+      q('ih1q6','MATCH','मात्रा और शब्द मिलाओ।',{
+        pairs:[
+          {left:'ा (aa)',right:'माला'},
+          {left:'ि (i)', right:'किताब'},
+          {left:'ी (ee)',right:'नदी'},
+          {left:'ु (u)', right:'गुड़िया'},
+        ]
+      }),
+      // UNSCRAMBLE — Hindi
+      q('ih1q7','UNSCRAMBLE','अक्षरों को सही क्रम में लगाकर शब्द बनाओ। (Hint: fruit)',{
+        scrambled:['म','ल','आ'],
+        answer:'आम',
+        hint:'एक मीठा फल 🥭'
+      }),
+      // DRAG_SLOT
+      q('ih1q8','DRAG_SLOT','रिक्त स्थान भरो: मेरा नाम [BLANK] है।',{
+        text:'मेरा नाम [BLANK] है।',
+        slots:[{answer:'राम'}],
+        options:['राम','खाना','स्कूल','पानी']
+      }),
+      q('ih1q9','DRAG_SLOT','रिक्त स्थान भरो: यह एक [BLANK] है।',{
+        text:'यह एक [BLANK] है।',
+        slots:[{answer:'किताब'}],
+        options:['किताब','खाना','पानी','स्कूल']
+      }),
+      q('ih1q10','CIRCLE_FIND','इन में से व्यंजन (consonants) पर टैप करो!',{
+        items:['अ','क','ई','ख','उ','ग','ए','घ','ओ','ङ'],
+        correctItems:['क','ख','ग','घ','ङ']
+      }),
+    ]
+  },
+];
+
 const ALL_WORKSHEETS = [
+
   ...ENG_WORKSHEETS,
   ...MATHS_WORKSHEETS,
   ...GA_WORKSHEETS,
   ...HINDI_WORKSHEETS,
   ...ART_WORKSHEETS,
+  ...INTERACTIVE_WORKSHEETS,
 ];
+
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getWorksheetsBySubject(subjectId) {
