@@ -87,6 +87,7 @@ function router() {
     if (seg[1] === 'subject' && seg[2]) return renderMentorSubject(seg[2]);
     if (seg[1] === 'builder') return renderBuilder(seg[2] || null);
     if (seg[1] === 'print' && seg[2]) return renderPrint(seg[2]);
+    if (seg[1] === 'trace-report') return renderTracingReport();
     return renderMentorDashboard();
   }
   renderLanding();
@@ -250,12 +251,12 @@ function renderCurrentQuestion() {
   const isHindi = worksheet.subject === 'hindi';
 
   let qBody = '';
-  const NEW_TYPES = ['MATCH','CIRCLE_FIND','DRAG_SLOT','ARRANGE','SEQUENCE_NEXT','SEQUENCE_PREV','UNSCRAMBLE','WORD_BUILD','WORD_FIRST_LETTER','WORD_LAST_LETTER','AUDIO_CLIP','VOWEL_SORT','TEXT_HIGHLIGHT','PICTURE_WRITE','AUDIO_WRITE','GROUPS_OF_TENS'];
+  const NEW_TYPES = ['MATCH','MATCH_IMAGE','CIRCLE_FIND','DRAG_SLOT','ARRANGE','SEQUENCE_NEXT','SEQUENCE_PREV','UNSCRAMBLE','WORD_BUILD','WORD_FIRST_LETTER','WORD_LAST_LETTER','AUDIO_CLIP','VOWEL_SORT','TEXT_HIGHLIGHT','PICTURE_WRITE','AUDIO_WRITE','NUMBER_WRITE','GROUPS_OF_TENS','READ_AND_ANSWER'];
   if (question.type === 'MCQ')                   qBody = renderMCQ(question);
   else if (question.type === 'TRUE_FALSE')        qBody = renderTrueFalse(question);
   else if (question.type === 'FILL_BLANK')        qBody = renderFillBlank(question);
   else if (question.type === 'CATEGORIZE')        qBody = renderCategorize(question);
-  else if (question.type === 'MATCH')             qBody = renderMatch(question);
+  else if (question.type === 'MATCH' || question.type === 'MATCH_IMAGE') qBody = renderMatch(question);
   else if (question.type === 'CIRCLE_FIND')       qBody = renderCircleFind(question);
   else if (question.type === 'DRAG_SLOT')         qBody = renderDragSlot(question);
   else if (question.type === 'ARRANGE')           qBody = renderArrange(question);
@@ -270,14 +271,16 @@ function renderCurrentQuestion() {
   else if (question.type === 'TEXT_HIGHLIGHT')    qBody = renderTextHighlight(question);
   else if (question.type === 'PICTURE_WRITE')     qBody = renderPictureWrite(question);
   else if (question.type === 'AUDIO_WRITE')       qBody = renderAudioWrite(question);
+  else if (question.type === 'NUMBER_WRITE')      qBody = renderNumberWrite(question);
   else if (question.type === 'GROUPS_OF_TENS')    qBody = renderGroupsOfTens(question);
+  else if (question.type === 'READ_AND_ANSWER')   qBody = renderReadAndAnswer(question);
   else qBody = renderMCQ(question);
 
   // New types: button starts disabled
   const isNewType = NEW_TYPES.includes(question.type);
 
-  // AUDIO_CLIP text mode + PICTURE_WRITE + AUDIO_WRITE: check always enabled
-  const alwaysEnabled = ['PICTURE_WRITE','AUDIO_WRITE','TEXT_HIGHLIGHT','GROUPS_OF_TENS'].includes(question.type)
+  // Input-based questions: check always enabled
+  const alwaysEnabled = ['PICTURE_WRITE','AUDIO_WRITE','TEXT_HIGHLIGHT','NUMBER_WRITE','GROUPS_OF_TENS','READ_AND_ANSWER'].includes(question.type)
     || (question.type === 'AUDIO_CLIP' && question.answerType !== 'mcq');
   const checkDisabled = alwaysEnabled ? false
     : isNewType ? true : (question.type !== 'FILL_BLANK' && state.player.selectedOption === null);
@@ -485,7 +488,7 @@ function checkAnswer() {
   } else if (question.type === 'CATEGORIZE') {
     const cs = window._catState;
     isCorrect = cs ? cs.items.every((item, i) => cs.placements[i] === item.correctCategory) : false;
-  } else if (['MATCH','CIRCLE_FIND','DRAG_SLOT','ARRANGE','SEQUENCE_NEXT','SEQUENCE_PREV','UNSCRAMBLE','WORD_BUILD','WORD_FIRST_LETTER','WORD_LAST_LETTER'].includes(question.type)) {
+  } else if (['MATCH','MATCH_IMAGE','CIRCLE_FIND','DRAG_SLOT','ARRANGE','SEQUENCE_NEXT','SEQUENCE_PREV','UNSCRAMBLE','WORD_BUILD','WORD_FIRST_LETTER','WORD_LAST_LETTER'].includes(question.type)) {
     const result = evaluateNewType(question);
     isCorrect   = result.isCorrect;
     givenAnswer = result.givenAnswer;
@@ -549,10 +552,20 @@ function checkAnswer() {
     givenAnswer = inp ? inp.value.trim() : '';
     isCorrect = givenAnswer.toLowerCase() === String(question.expectedAnswer || question.answer || '').toLowerCase();
     if (inp) { inp.disabled = true; inp.className = `fill-blank-input ${isCorrect?'correct':'wrong'}`; }
+  } else if (question.type === 'NUMBER_WRITE') {
+    const inp = document.getElementById('numw-input');
+    givenAnswer = inp ? inp.value.trim() : '';
+    isCorrect = givenAnswer.toLowerCase() === String(question.answer || '').toLowerCase();
+    if (inp) { inp.disabled = true; inp.className = `fill-blank-input ${isCorrect?'correct':'wrong'}`; }
   } else if (question.type === 'GROUPS_OF_TENS') {
     const inp = document.getElementById('got-input');
     givenAnswer = inp ? inp.value.trim() : '';
     isCorrect = givenAnswer === String(question.answer);
+    if (inp) { inp.disabled = true; inp.className = `fill-blank-input ${isCorrect?'correct':'wrong'}`; }
+  } else if (question.type === 'READ_AND_ANSWER') {
+    const inp = document.getElementById('raa-input');
+    givenAnswer = inp ? inp.value.trim() : (givenAnswer || '');
+    isCorrect = givenAnswer.toLowerCase() === String(question.answer || '').toLowerCase();
     if (inp) { inp.disabled = true; inp.className = `fill-blank-input ${isCorrect?'correct':'wrong'}`; }
   } else {
     // MCQ
@@ -1205,17 +1218,18 @@ function doneTracing() {
 }
 
 // ── Save tracing step report ──────────────────────────────────
-function saveTracingReport(letter, lang, sheet, accuracy) {
+function saveTracingReport(letter, lang, p3, p4) {
+  const sheet = typeof p3 === 'string' ? p3 : (typeof p4 === 'string' ? p4 : '4-line');
+  const accuracy = typeof p3 === 'number' ? p3 : (typeof p4 === 'number' ? p4 : 0);
   try {
     const key = 'kw_trace_reports';
     const list = JSON.parse(localStorage.getItem(key) || '[]');
     list.unshift({
       letter, lang, sheet, accuracy,
-      mode:      _tMode,
       timestamp: new Date().toISOString(),
       date:      new Date().toLocaleDateString('en-IN'),
     });
-    if (list.length > 500) list.splice(500); // cap at 500 records
+    if (list.length > 500) list.splice(500);
     localStorage.setItem(key, JSON.stringify(list));
   } catch (_) { /* storage full — silently ignore */ }
 }
@@ -2155,6 +2169,41 @@ function renderGroupsOfTens(q) {
     </div>`;
 }
 
+// ══════════════════════════════════════════════════════════════
+// NUMBER_WRITE — See digit, write number word name
+// ══════════════════════════════════════════════════════════════
+function renderNumberWrite(q) {
+  const digit = q.digit || q.number || '5';
+  return `
+    <div class="number-write-area">
+      <div style="font-size:72px;font-weight:800;color:var(--primary);text-align:center;margin-bottom:8px">${esc(String(digit))}</div>
+      <div style="font-size:14px;color:#7A7A8A;text-align:center;margin-bottom:12px">
+        ${q.text ? esc(q.text) : 'Write the number name word:'}
+      </div>
+      <input id="numw-input" class="fill-blank-input" type="text"
+        placeholder="Type the number name..." autocomplete="off" autocorrect="off" spellcheck="false"
+        style="width:100%;font-size:20px;text-align:center">
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// READ_AND_ANSWER — Passage + comprehension question
+// ══════════════════════════════════════════════════════════════
+function renderReadAndAnswer(q) {
+  return `
+    <div class="read-answer-area">
+      <div style="background:#1F1F35;border-radius:12px;padding:16px;margin-bottom:16px;border-left:4px solid var(--accent);font-size:16px;line-height:1.6">
+        📖 <strong>Passage:</strong><br>${esc(q.passage || '')}
+      </div>
+      <div style="font-weight:700;font-size:16px;margin-bottom:12px;color:var(--text-bright)">
+        ❓ ${esc(q.text || 'Answer the question:')}
+      </div>
+      <input id="raa-input" class="fill-blank-input" type="text"
+        placeholder="Type your answer here..." autocomplete="off" autocorrect="off" spellcheck="false"
+        style="width:100%;font-size:18px">
+    </div>`;
+}
+
 
 function loadLetter(lang, idx) {
   _tLang = lang;
@@ -2283,325 +2332,9 @@ function clearCanvas() {
   initTraceCanvas(); // re-init redraws the guide
 }
 
-// ══════════════════════════════════════════════════════════════
-// SCREEN: MENTOR DASHBOARD
-// ══════════════════════════════════════════════════════════════
-function renderMentorDashboard() {
-  state.mode = 'mentor';
-  const custom = getCustomWorksheets().length;
-  const total  = ALL_WORKSHEETS.length + custom;
+// Note: Mentor views (renderMentorDashboard, renderMentorSubject, renderBuilder, renderPrint) are provided by mentor.js
 
-  const subCards = Object.values(SUBJECTS).map(sub => {
-    const count = getWorksheetList(sub.id).length;
-    return `
-      <button class="mentor-subject-card" onclick="navigate('/mentor/subject/${sub.id}')" id="msub-${sub.id}">
-        <div class="sub-icon" style="background:${sub.light}"><span style="font-size:24px">${sub.emoji}</span></div>
-        <div class="sub-info">
-          <div class="sub-name">${sub.name}</div>
-          <div class="sub-count">${count} worksheets</div>
-        </div>
-      </button>`;
-  }).join('');
-
-  setApp(`
-    <div class="mentor-screen screen">
-      <div class="mentor-dashboard-hero">
-        <div class="dashboard-greeting">Welcome, <span>Mentor!</span> 👋</div>
-        <div class="dashboard-subtitle">UKG-C · Term 1 Examination Preparation</div>
-        <div class="dashboard-stats">
-          <div class="dashboard-stat"><div class="stat-number">${total}</div><div class="stat-label">Total Sheets</div></div>
-          <div class="dashboard-stat"><div class="stat-number">${custom}</div><div class="stat-label">My Sheets</div></div>
-          <div class="dashboard-stat"><div class="stat-number">5</div><div class="stat-label">Subjects</div></div>
-        </div>
-      </div>
-      <div class="mentor-body">
-        <div class="mentor-section-header">
-          <div class="mentor-section-title">📚 Subjects</div>
-        </div>
-        <div class="mentor-subject-grid">${subCards}</div>
-        <div style="margin-top:24px">
-          <div class="mentor-section-title" style="margin-bottom:12px">⚡ Quick Actions</div>
-          <div style="display:flex;flex-wrap:wrap;gap:12px">
-            <button class="btn btn-primary" onclick="navigate('/mentor/builder')" id="btn-create-ws">+ Create Worksheet</button>
-            <button class="btn btn-dark" onclick="navigate('/')" id="btn-switch-child">👶 Switch to Child</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `);
-}
-
-// ══════════════════════════════════════════════════════════════
-// SCREEN: MENTOR SUBJECT VIEW
-// ══════════════════════════════════════════════════════════════
-function renderMentorSubject(subjectId) {
-  const sub = SUBJECTS[subjectId];
-  if (!sub) return navigate('/mentor');
-  const wsList   = getWorksheetList(subjectId);
-  const progress = getProgress();
-  const customIds = getCustomWorksheets().map(w => w.id);
-
-  const cards = wsList.map((ws, idx) => {
-    const p = progress[ws.id];
-    const isCustom = customIds.includes(ws.id);
-    return `
-      <div class="mentor-worksheet-card" id="mwc-${ws.id}">
-        <div class="mwc-num" style="background:${sub.color}">${idx + 1}</div>
-        <div class="mwc-info">
-          <div class="mwc-title">${esc(ws.title)}</div>
-          <div class="mwc-meta">
-            ${badge(ws.difficulty)}
-            <span>${ws.questions.length} Q</span>
-            ${p ? `<span style="color:#43D9A2">✓ ${p.pct}%</span>` : ''}
-            ${isCustom ? '<span style="color:#FF8C42">Custom</span>' : ''}
-          </div>
-        </div>
-        <div class="mwc-actions">
-          <button class="icon-btn print" onclick="navigate('/mentor/print/${ws.id}')" title="Print" id="print-${ws.id}">🖨</button>
-          ${isCustom ? `
-            <button class="icon-btn" onclick="navigate('/mentor/builder/${ws.id}')" title="Edit" id="edit-${ws.id}">✏️</button>
-            <button class="icon-btn danger" onclick="confirmDeleteWS('${ws.id}')" title="Delete" id="del-${ws.id}">🗑</button>
-          ` : ''}
-        </div>
-      </div>`;
-  }).join('');
-
-  setApp(`
-    <div class="mentor-screen screen">
-      <div class="mentor-header">
-        <button class="back-btn" onclick="navigate('/mentor')" id="btn-back-msub">←</button>
-        <h1>${sub.emoji} ${sub.name}</h1>
-      </div>
-      <div class="mentor-worksheet-list">
-        ${cards || `<div class="empty-state" style="color:var(--dark-text-secondary)"><div class="empty-icon">📭</div><h3>No worksheets yet</h3><p>Create the first worksheet for this subject!</p></div>`}
-      </div>
-      <button class="fab" onclick="navigate('/mentor/builder')" id="btn-fab" title="Create">+</button>
-    </div>
-  `);
-}
-
-function confirmDeleteWS(id) {
-  if (confirm('Delete this worksheet? This cannot be undone.')) {
-    deleteCustomWorksheet(id);
-    showToast('Worksheet deleted', 'success');
-    const segs = window.location.hash.replace('#/','').split('/');
-    if (segs[1] === 'subject') renderMentorSubject(segs[2]);
-    else navigate('/mentor');
-  }
-}
-
-// ══════════════════════════════════════════════════════════════
-// SCREEN: MENTOR BUILDER
-// ══════════════════════════════════════════════════════════════
-function renderBuilder(editId) {
-  if (editId) {
-    const existing = getCustomWorksheets().find(w => w.id === editId);
-    if (existing) {
-      state.builder = { editId, title: existing.title, subject: existing.subject,
-        difficulty: existing.difficulty, description: existing.description || '',
-        questions: [...existing.questions], addingType: 'MCQ' };
-    }
-  } else {
-    state.builder = { editId: null, title: '', subject: 'english', difficulty: 'easy',
-      description: '', questions: [], addingType: 'MCQ' };
-  }
-  _renderBuilderUI();
-}
-
-function _renderBuilderUI() {
-  const b = state.builder;
-  const qList = b.questions.map((q, i) => `
-    <div class="built-q-card" id="bq-${i}">
-      <div class="built-q-idx">${i + 1}</div>
-      <div class="built-q-text">${esc(q.text)}</div>
-      <div class="built-q-type">${q.type}</div>
-      <button class="icon-btn danger" onclick="removeBuilderQ(${i})" id="rm-${i}">✕</button>
-    </div>`).join('');
-
-  const qFormHtml = _renderQForm(b.addingType);
-
-  setApp(`
-    <div class="builder-screen mentor-screen screen">
-      <div class="mentor-header">
-        <button class="back-btn" onclick="navigate('/mentor')" id="btn-back-builder">←</button>
-        <h1>${b.editId ? '✏️ Edit Worksheet' : '+ New Worksheet'}</h1>
-      </div>
-      <div class="builder-body">
-        <div class="builder-section-header">Worksheet Details</div>
-        <div class="form-group">
-          <label class="form-label">Title *</label>
-          <input class="form-input" id="b-title" type="text" placeholder="e.g., Addition Practice" value="${esc(b.title)}" oninput="state.builder.title=this.value">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="form-group">
-            <label class="form-label">Subject</label>
-            <select class="form-select" id="b-subject" onchange="state.builder.subject=this.value">
-              ${Object.values(SUBJECTS).map(s => `<option value="${s.id}" ${b.subject===s.id?'selected':''}>${s.emoji} ${s.name}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Difficulty</label>
-            <select class="form-select" id="b-difficulty" onchange="state.builder.difficulty=this.value">
-              <option value="easy"   ${b.difficulty==='easy'?'selected':''}>🟢 Easy</option>
-              <option value="medium" ${b.difficulty==='medium'?'selected':''}>🟡 Medium</option>
-              <option value="hard"   ${b.difficulty==='hard'?'selected':''}>🔴 Hard</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Description (optional)</label>
-          <input class="form-input" id="b-desc" type="text" placeholder="Brief description" value="${esc(b.description)}" oninput="state.builder.description=this.value">
-        </div>
-
-        <div class="builder-section-header">Add Questions (${b.questions.length} added)</div>
-        <div class="q-type-grid">
-          ${[{t:'MCQ',i:'🔘',l:'MCQ'},{t:'TRUE_FALSE',i:'✅',l:'True/False'},{t:'FILL_BLANK',i:'___',l:'Fill Blank'}].map(x => `
-            <button class="q-type-btn ${b.addingType===x.t?'active':''}" onclick="setBuilderQType('${x.t}')" id="qt-${x.t}">
-              <span class="q-icon">${x.i}</span>${x.l}
-            </button>`).join('')}
-        </div>
-
-        ${qFormHtml}
-
-        ${b.questions.length > 0 ? `
-          <div class="builder-section-header">Questions Added</div>
-          <div class="questions-in-builder">${qList}</div>` : ''}
-
-        <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="saveBuilderWS()" id="btn-save-ws">
-          💾 ${b.editId ? 'Update Worksheet' : 'Save Worksheet'}
-        </button>
-      </div>
-    </div>
-  `);
-}
-
-function _renderQForm(type) {
-  if (type === 'MCQ') return `
-    <div class="q-builder-card">
-      <div class="q-builder-header"><span class="q-num-badge">MCQ Question</span></div>
-      <div class="form-group">
-        <label class="form-label">Question Text *</label>
-        <input class="form-input" id="qf-q" type="text" placeholder="Type the question…">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Options (select the correct one)</label>
-        ${['A','B','C','D'].map((l,i) => `
-          <div class="mcq-option-row">
-            <input type="radio" name="correct-opt" class="correct-radio" value="${l}" id="co-${l}">
-            <span class="opt-label">${l}</span>
-            <input class="form-input" style="height:40px;flex:1" id="qf-opt-${l}" type="text" placeholder="Option ${l}…">
-          </div>`).join('')}
-      </div>
-      <div class="form-group">
-        <label class="form-label">Hint (optional)</label>
-        <input class="form-input" id="qf-hint" type="text" placeholder="A helpful hint…">
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="addBuilderQ('MCQ')" id="btn-add-mcq">+ Add This Question</button>
-    </div>`;
-
-  if (type === 'TRUE_FALSE') return `
-    <div class="q-builder-card">
-      <div class="q-builder-header"><span class="q-num-badge">True / False</span></div>
-      <div class="form-group">
-        <label class="form-label">Statement *</label>
-        <input class="form-input" id="qf-q" type="text" placeholder="Type a True or False statement…">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Correct Answer</label>
-        <div style="display:flex;gap:16px">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--dark-text-primary)">
-            <input type="radio" name="tf-ans" value="true" id="tf-t" style="accent-color:var(--accent)"> True
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--dark-text-primary)">
-            <input type="radio" name="tf-ans" value="false" id="tf-f" style="accent-color:var(--danger)"> False
-          </label>
-        </div>
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="addBuilderQ('TRUE_FALSE')" id="btn-add-tf">+ Add This Question</button>
-    </div>`;
-
-  if (type === 'FILL_BLANK') return `
-    <div class="q-builder-card">
-      <div class="q-builder-header"><span class="q-num-badge">Fill in the Blank</span></div>
-      <div class="form-group">
-        <label class="form-label">Question / Sentence *</label>
-        <input class="form-input" id="qf-q" type="text" placeholder='e.g., "The cat sat on the ___."'>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Correct Answer *</label>
-        <input class="form-input" id="qf-ans" type="text" placeholder="The word that fills the blank…">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Hint (optional)</label>
-        <input class="form-input" id="qf-hint" type="text" placeholder="A helpful hint…">
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="addBuilderQ('FILL_BLANK')" id="btn-add-fb">+ Add This Question</button>
-    </div>`;
-  return '';
-}
-
-function setBuilderQType(type) { state.builder.addingType = type; _renderBuilderUI(); }
-
-function addBuilderQ(type) {
-  const qtxt = ($('#qf-q') || {}).value || '';
-  if (!qtxt.trim()) { showToast('Please enter the question text', 'error'); return; }
-  const q = { id: `cq_${Date.now()}`, type, text: qtxt.trim(), marks: 1 };
-
-  if (type === 'MCQ') {
-    const opts = ['A','B','C','D'].map(l => ($(`#qf-opt-${l}`) || {}).value || '').filter(Boolean);
-    if (opts.length < 2) { showToast('Please add at least 2 options', 'error'); return; }
-    const chk = document.querySelector('input[name="correct-opt"]:checked');
-    if (!chk) { showToast('Please mark the correct option', 'error'); return; }
-    q.options = opts;
-    q.answer = opts[['A','B','C','D'].indexOf(chk.value)];
-    const hint = ($('#qf-hint') || {}).value;
-    if (hint) q.hint = hint.trim();
-  } else if (type === 'TRUE_FALSE') {
-    const chk = document.querySelector('input[name="tf-ans"]:checked');
-    if (!chk) { showToast('Please select True or False', 'error'); return; }
-    q.answer = chk.value === 'true';
-  } else if (type === 'FILL_BLANK') {
-    const ans = ($('#qf-ans') || {}).value || '';
-    if (!ans.trim()) { showToast('Please enter the correct answer', 'error'); return; }
-    q.answer = ans.trim();
-    const hint = ($('#qf-hint') || {}).value;
-    if (hint) q.hint = hint.trim();
-  }
-
-  state.builder.questions.push(q);
-  showToast(`Question ${state.builder.questions.length} added!`, 'success');
-  _renderBuilderUI();
-}
-
-function removeBuilderQ(idx) {
-  state.builder.questions.splice(idx, 1);
-  _renderBuilderUI();
-}
-
-function saveBuilderWS() {
-  const b = state.builder;
-  const title = ($('#b-title') || {}).value || b.title;
-  const subject = ($('#b-subject') || {}).value || b.subject;
-  const difficulty = ($('#b-difficulty') || {}).value || b.difficulty;
-  const description = ($('#b-desc') || {}).value || b.description;
-
-  if (!title.trim()) { showToast('Please enter a worksheet title', 'error'); return; }
-  if (b.questions.length === 0) { showToast('Please add at least 1 question', 'error'); return; }
-
-  const ws = {
-    id: b.editId || `custom_${Date.now()}`,
-    subject, difficulty, topic: 'Custom',
-    title: title.trim(),
-    description: description.trim(),
-    estimatedTime: Math.max(5, Math.floor(b.questions.length * 1.5)),
-    questions: b.questions,
-    isCustom: true,
-    createdAt: new Date().toISOString(),
-  };
-  saveCustomWorksheet(ws);
-  showToast('Worksheet saved! 🎉', 'success');
-  setTimeout(() => navigate(`/mentor/subject/${subject}`), 1000);
-}
+// Note: Worksheet Builder is provided by mentor.js (renderBuilder, _renderBuilderUI, saveBuilderWorksheet, etc.)
 
 // ══════════════════════════════════════════════════════════════
 // SCREEN: PRINT VIEW
