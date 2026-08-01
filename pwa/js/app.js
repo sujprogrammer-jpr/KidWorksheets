@@ -312,7 +312,7 @@ function renderTuitionSheetPlayer(worksheet, question) {
           <div style="text-align:center;border-bottom:2px dashed var(--dark-border);padding-bottom:14px;margin-bottom:16px">
             <div style="font-family:Outfit,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--primary-light);text-transform:uppercase">VARDHMAN SRIKALYAN INTERNATIONAL SCHOOL</div>
             <div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:800;color:var(--dark-text-primary);margin:4px 0">${esc(worksheet.title)}</div>
-            <div style="font-family:Nunito,sans-serif;font-size:13px;color:var(--dark-text-secondary)">Class: UKG-C &nbsp;·&nbsp; Subject: Tuition Test &nbsp;·&nbsp; Sheet: ${sheetNames[sheetType] || sheetType}</div>
+            <div style="font-family:Nunito,sans-serif;font-size:13px;color:var(--dark-text-secondary)">Class: UKG-C &nbsp;·&nbsp; Subject: Written Test &nbsp;·&nbsp; Sheet: ${sheetNames[sheetType] || sheetType}</div>
           </div>
 
           <!-- Student Name & Date Row -->
@@ -499,7 +499,7 @@ function submitTuitionWorksheet() {
   const { worksheetId } = state.player;
   saveProgress(worksheetId, 100, 3);
   if (typeof spawnConfetti === 'function') spawnConfetti();
-  showToast('🎉 Tuition Test Submitted Successfully!', 'success');
+  showToast('🎉 Written Test Submitted Successfully!', 'success');
 
   setTimeout(() => {
     navigate('/child/results');
@@ -1358,22 +1358,19 @@ function drawTuitionNotebookLines(ctx, W, H, sheetType, sampleText) {
       ctx.beginPath(); ctx.moveTo(leftX, y3); ctx.lineTo(rightX, y3); ctx.stroke();
     }
   } else if (sheetType === '2-line') {
-    // 2-Line Pattern (Pink Box Rows with taller line height)
+    // 2-Line Notebook Pattern (Double Equal Line Gap Size - 25 Rows)
+    const rows2Line = 25;
     const availableH = H - startY - 18;
-    const gap = 4;
-    const bandH = Math.max(44, Math.floor((availableH - (totalRows - 1) * gap) / totalRows));
+    const step = availableH / rows2Line;
 
     const leftX = 14;
     const rightX = W - 14;
 
-    for (let r = 0; r < totalRows; r++) {
-      const y = startY + r * (bandH + gap);
-      ctx.strokeStyle = '#EC407A'; ctx.lineWidth = 2; ctx.setLineDash([]);
-      ctx.strokeRect(leftX, y, rightX - leftX, bandH);
+    ctx.strokeStyle = '#546E7A'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
 
-      const y2 = y + bandH * 0.50;
-      ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.moveTo(leftX, y2); ctx.lineTo(rightX, y2); ctx.stroke();
+    for (let r = 0; r <= rows2Line; r++) {
+      const y = startY + r * step;
+      ctx.beginPath(); ctx.moveTo(leftX, y); ctx.lineTo(rightX, y); ctx.stroke();
     }
   } else if (sheetType === '1-line') {
     // Single Line Notebook Pattern (15 Rows)
@@ -2723,7 +2720,7 @@ function renderPrint(worksheetId) {
         <div class="print-header">
           <div class="print-school-name">VARDHMAN SRIKALYAN INTERNATIONAL SCHOOL</div>
           <div class="print-ws-title">${esc(ws.title)}</div>
-          <div class="print-ws-meta">Class: UKG-C &nbsp;·&nbsp; Subject: ${esc(sub.name||'Tuition Test')} &nbsp;·&nbsp; Difficulty: ${esc(ws.difficulty)} &nbsp;·&nbsp; Total Questions: 10</div>
+          <div class="print-ws-meta">Class: UKG-C &nbsp;·&nbsp; Subject: ${esc(sub.name||'Written Test')} &nbsp;·&nbsp; Difficulty: ${esc(ws.difficulty)} &nbsp;·&nbsp; Total Questions: 10</div>
         </div>
         <div class="print-student-row">
           <div><div class="print-field-label">Name</div><div class="print-field"></div></div>

@@ -303,7 +303,7 @@ function _renderBuilderUI() {
 
         ${b.subject === 'tuition' ? `
           <div class="builder-meta-card" style="margin-top:14px;border:2px solid var(--primary);background:var(--dark-surface-2)">
-            <div style="font-size:15px;font-weight:800;color:var(--primary-light);margin-bottom:10px">📝 Tuition Test Sheet Configuration</div>
+            <div style="font-size:15px;font-weight:800;color:var(--primary-light);margin-bottom:10px">📝 Written Test Sheet Configuration</div>
             <div class="builder-field">
               <label for="ws-sheet-type">Sheet Pattern Type *</label>
               <select id="ws-sheet-type" class="builder-select" onchange="

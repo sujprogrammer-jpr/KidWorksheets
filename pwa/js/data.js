@@ -39,9 +39,9 @@ const SUBJECTS = {
     worksheetCount: 1
   },
   tuition: {
-    id: 'tuition', name: 'Tuition Test', emoji: '📝',
+    id: 'tuition', name: 'Written Test', emoji: '📝',
     color: '#8B5CF6', light: '#F3E8FF',
-    description: 'Custom Sheet Generator (4-Line, 3-Line, Grid & Blank)',
+    description: 'Custom Sheet Generator (4-Line, 3-Line, 2-Line, 1-Line, Grid & Blank)',
     worksheetCount: 4
   }
 };
