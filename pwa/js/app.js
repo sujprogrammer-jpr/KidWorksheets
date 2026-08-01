@@ -59,7 +59,12 @@ function setApp(html) {
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function getAllWorksheets() { return [...ALL_WORKSHEETS, ...getCustomWorksheets()]; }
+function getAllWorksheets() {
+  const customs = getCustomWorksheets();
+  const customIds = new Set(customs.map(c => c.id));
+  const defaults = ALL_WORKSHEETS.filter(w => !customIds.has(w.id));
+  return [...customs, ...defaults];
+}
 function getWorksheet(id) { return getAllWorksheets().find(w => w.id === id) || null; }
 function getWorksheetList(subjectId) { return getAllWorksheets().filter(w => w.subject === subjectId); }
 function badge(d) { return `<span class="badge badge-${d}">${d}</span>`; }
@@ -1292,16 +1297,16 @@ function drawTuitionNotebookLines(ctx, W, H, sheetType, sampleText) {
   const totalRows = 15;
   const startY = 18;
 
-  // Compute row height & gap for 15 rows
-  const availableH = H - startY - 18;
-  const gap = Math.max(6, Math.floor(availableH / (totalRows * 4)));
-  const bandH = Math.max(34, Math.floor((availableH - (totalRows - 1) * gap) / totalRows));
-
-  const leftX = 14;
-  const rightX = W - 14;
-
   if (sheetType === '4-line') {
-    // English 4-Line Notebook Pattern (15 Pink Box Rows)
+    // Classic English 4-Line Notebook Pattern (Red Headline, Blue Dash Midline, Blue Baseline, Red Footline, Red Margin)
+    const marginX = 45;
+    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
+
+    const availableH = H - startY - 18;
+    const gap = Math.max(8, Math.floor(availableH / (totalRows * 5)));
+    const bandH = Math.max(34, Math.floor((availableH - (totalRows - 1) * gap) / totalRows));
+
     for (let r = 0; r < totalRows; r++) {
       const y = startY + r * (bandH + gap);
       const y1 = y;
@@ -1309,40 +1314,58 @@ function drawTuitionNotebookLines(ctx, W, H, sheetType, sampleText) {
       const y3 = y + bandH * 0.67;
       const y4 = y + bandH;
 
-      // Pink outer rectangular border
-      ctx.strokeStyle = '#EC407A'; ctx.lineWidth = 2; ctx.setLineDash([]);
-      ctx.strokeRect(leftX, y, rightX - leftX, bandH);
+      // Line 1: Top Headline (Red)
+      ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y1); ctx.lineTo(W - 12, y1); ctx.stroke();
 
-      // Line 2: Midline (Light Blue Dash)
-      ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.2; ctx.setLineDash([5, 4]);
-      ctx.beginPath(); ctx.moveTo(leftX, y2); ctx.lineTo(rightX, y2); ctx.stroke();
+      // Line 2: Waistline / Midline (Blue Dash)
+      ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y2); ctx.lineTo(W - 12, y2); ctx.stroke();
 
-      // Line 3: Baseline (Light Blue Solid)
-      ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
-      ctx.beginPath(); ctx.moveTo(leftX, y3); ctx.lineTo(rightX, y3); ctx.stroke();
+      // Line 3: Baseline (Blue Solid)
+      ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y3); ctx.lineTo(W - 12, y3); ctx.stroke();
+
+      // Line 4: Footline (Red)
+      ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y4); ctx.lineTo(W - 12, y4); ctx.stroke();
     }
   } else if (sheetType === '3-line') {
-    // Hindi 3-Line Notebook Pattern (15 Pink Box Rows with 3 Inner Light Blue Lines — matching Image #2!)
+    // 3-Line Notebook Pattern (Pink Rectangle Boxes with 3 Inner Light Blue Parallel Lines & taller height)
+    const availableH = H - startY - 18;
+    const gap = 4;
+    const bandH = Math.max(44, Math.floor((availableH - (totalRows - 1) * gap) / totalRows));
+
+    const leftX = 14;
+    const rightX = W - 14;
+
     for (let r = 0; r < totalRows; r++) {
       const y = startY + r * (bandH + gap);
 
-      // 1. Draw Pink / Rose Rectangular Outer Box (Image #2 style)
+      // 1. Draw Pink / Rose Rectangular Outer Box
       ctx.strokeStyle = '#EC407A'; ctx.lineWidth = 2; ctx.setLineDash([]);
       ctx.strokeRect(leftX, y, rightX - leftX, bandH);
 
       // 2. Draw 3 Inner Light Blue Parallel Lines inside the Pink Box
       ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.2; ctx.setLineDash([]);
 
-      const y1 = y + bandH * 0.25;
+      const y1 = y + bandH * 0.22;
       const y2 = y + bandH * 0.50;
-      const y3 = y + bandH * 0.75;
+      const y3 = y + bandH * 0.78;
 
       ctx.beginPath(); ctx.moveTo(leftX, y1); ctx.lineTo(rightX, y1); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(leftX, y2); ctx.lineTo(rightX, y2); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(leftX, y3); ctx.lineTo(rightX, y3); ctx.stroke();
     }
   } else if (sheetType === '2-line') {
-    // Hindi 2-Line Pattern (15 Pink Box Rows)
+    // 2-Line Pattern (Pink Box Rows with taller line height)
+    const availableH = H - startY - 18;
+    const gap = 4;
+    const bandH = Math.max(44, Math.floor((availableH - (totalRows - 1) * gap) / totalRows));
+
+    const leftX = 14;
+    const rightX = W - 14;
+
     for (let r = 0; r < totalRows; r++) {
       const y = startY + r * (bandH + gap);
       ctx.strokeStyle = '#EC407A'; ctx.lineWidth = 2; ctx.setLineDash([]);

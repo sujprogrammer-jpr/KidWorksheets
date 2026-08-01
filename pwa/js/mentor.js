@@ -192,13 +192,27 @@ function renderBuilder(editId) {
   if (editId) {
     const existing = getWorksheet(editId);
     if (existing) {
+      const qs = JSON.parse(JSON.stringify(existing.questions || []));
+      const activeSheetType = existing.sheetType || (qs[0] ? qs[0].sheetType : '4-line');
+      const activeComments  = existing.comments  || (qs[0] ? qs[0].comments  : '');
+      const activeSample    = existing.sampleText|| (qs[0] ? qs[0].sampleText: '');
+
+      if (existing.subject === 'tuition' && qs[0]) {
+        qs[0].sheetType  = activeSheetType;
+        qs[0].comments   = activeComments;
+        qs[0].sampleText = activeSample;
+      }
+
       state.builder = {
         editId,
-        title:       existing.title,
-        subject:     existing.subject,
+        title:       existing.title || '',
+        subject:     existing.subject || 'english',
         difficulty:  existing.difficulty || 'easy',
         description: existing.description || '',
-        questions:   JSON.parse(JSON.stringify(existing.questions)),
+        sheetType:   activeSheetType,
+        comments:    activeComments,
+        sampleText:  activeSample,
+        questions:   qs,
         addingType:  'MCQ',
         editingIndex: null,
       };
@@ -206,7 +220,7 @@ function renderBuilder(editId) {
   } else if (!state.builder || state.builder.editId !== null) {
     state.builder = {
       editId: null, title: '', subject: 'english',
-      difficulty: 'easy', description: '', questions: [], addingType: 'MCQ',
+      difficulty: 'easy', description: '', sheetType: '4-line', comments: '', sampleText: '', questions: [], addingType: 'MCQ',
       editingIndex: null,
     };
   }
@@ -225,6 +239,19 @@ function _renderBuilderUI() {
   const diffOpts = ['easy','medium','hard'].map(d =>
     `<option value="${d}" ${b.difficulty===d?'selected':''}>${d.charAt(0).toUpperCase()+d.slice(1)}</option>`
   ).join('');
+
+  const currSheetType = b.sheetType || b.questions[0]?.sheetType || '4-line';
+  const currComments  = b.comments  || b.questions[0]?.comments  || '';
+  const currSample    = b.sampleText|| b.questions[0]?.sampleText|| '';
+
+  const sheetTypeOpts = [
+    { val: '4-line', label: '📝 4-Line Notebook Sheet (English Pattern)' },
+    { val: '3-line', label: '🇮🇳 3-Line Notebook Sheet (Hindi Pattern with Shiro-rekha)' },
+    { val: '2-line', label: '✍️ 2-Line Notebook Sheet (Hindi Pattern)' },
+    { val: '1-line', label: '📄 Single Line Notebook Sheet' },
+    { val: 'grid',   label: '🔢 Math Grid Square Boxes (Maths Pattern)' },
+    { val: 'blank',  label: '🎨 Blank Writing & Drawing Canvas' }
+  ].map(opt => `<option value="${opt.val}" ${currSheetType === opt.val ? 'selected' : ''}>${opt.label}</option>`).join('');
 
   const qList = qs.map((q, i) => `
     <div class="builder-q-row" id="bqr-${i}">
@@ -279,22 +306,29 @@ function _renderBuilderUI() {
             <div style="font-size:15px;font-weight:800;color:var(--primary-light);margin-bottom:10px">📝 Tuition Test Sheet Configuration</div>
             <div class="builder-field">
               <label for="ws-sheet-type">Sheet Pattern Type *</label>
-              <select id="ws-sheet-type" class="builder-select" onchange="if(state.builder.questions[0]) state.builder.questions[0].sheetType = this.value">
-                <option value="4-line">📝 4-Line Notebook Sheet (English Pattern)</option>
-                <option value="3-line">🇮🇳 3-Line Notebook Sheet (Hindi Pattern with Shiro-rekha)</option>
-                <option value="2-line">✍️ 2-Line Notebook Sheet (Hindi Pattern)</option>
-                <option value="1-line">📄 Single Line Notebook Sheet</option>
-                <option value="grid">🔢 Math Grid Square Boxes (Maths Pattern)</option>
-                <option value="blank">🎨 Blank Writing & Drawing Canvas</option>
+              <select id="ws-sheet-type" class="builder-select" onchange="
+                state.builder.sheetType = this.value;
+                if(!state.builder.questions[0]) state.builder.questions.push({type:'TUITION_CANVAS',marks:1});
+                state.builder.questions[0].sheetType = this.value;
+              ">
+                ${sheetTypeOpts}
               </select>
             </div>
             <div class="builder-field">
               <label for="ws-comments">Comments / Teacher Notes (optional)</label>
-              <input id="ws-comments" class="builder-input" placeholder="e.g. Capital letters must sit on blue baseline" oninput="if(state.builder.questions[0]) state.builder.questions[0].comments = this.value">
+              <input id="ws-comments" class="builder-input" placeholder="e.g. Capital letters must sit on blue baseline" value="${esc(currComments)}" oninput="
+                state.builder.comments = this.value;
+                if(!state.builder.questions[0]) state.builder.questions.push({type:'TUITION_CANVAS',marks:1});
+                state.builder.questions[0].comments = this.value;
+              ">
             </div>
             <div class="builder-field">
               <label for="ws-sample">Sample Guide Text (optional — printed faintly on top line)</label>
-              <input id="ws-sample" class="builder-input" placeholder="e.g. चल नल पर जल भर" oninput="if(state.builder.questions[0]) state.builder.questions[0].sampleText = this.value">
+              <input id="ws-sample" class="builder-input" placeholder="e.g. चल नल पर जल भर" value="${esc(currSample)}" oninput="
+                state.builder.sampleText = this.value;
+                if(!state.builder.questions[0]) state.builder.questions.push({type:'TUITION_CANVAS',marks:1});
+                state.builder.questions[0].sampleText = this.value;
+              ">
             </div>
           </div>
         ` : ''}
@@ -1214,23 +1248,39 @@ function saveBuilderWorksheet() {
   const b = state.builder;
   if (!b.title.trim()) { showToast('Please enter a worksheet title', ''); return; }
 
-  if (b.subject === 'tuition' && b.questions.length === 0) {
-    const sheetType = document.getElementById('ws-sheet-type')?.value || '4-line';
-    const comments = document.getElementById('ws-comments')?.value || b.description || '';
-    const sampleText = document.getElementById('ws-sample')?.value || '';
-    b.questions.push({
-      id: `custom_q_${Date.now()}`,
-      type: 'TUITION_CANVAS',
-      text: b.description || b.title,
-      instruction: b.description || b.title,
-      sheetType,
-      comments,
-      sampleText,
-      marks: 1
-    });
+  if (b.subject === 'tuition') {
+    const selSheetType  = document.getElementById('ws-sheet-type')?.value || b.sheetType || '4-line';
+    const selComments   = document.getElementById('ws-comments')?.value ?? b.comments ?? '';
+    const selSampleText = document.getElementById('ws-sample')?.value ?? b.sampleText ?? '';
+
+    b.sheetType  = selSheetType;
+    b.comments   = selComments;
+    b.sampleText = selSampleText;
+
+    if (b.questions.length === 0) {
+      b.questions.push({
+        id: `custom_q_${Date.now()}`,
+        type: 'TUITION_CANVAS',
+        text: b.description || b.title,
+        instruction: b.description || b.title,
+        sheetType: selSheetType,
+        comments: selComments,
+        sampleText: selSampleText,
+        marks: 1
+      });
+    } else {
+      b.questions.forEach(q => {
+        if (q.type === 'TUITION_CANVAS' || b.subject === 'tuition') {
+          q.sheetType  = selSheetType;
+          q.comments   = selComments;
+          q.sampleText = selSampleText;
+        }
+      });
+    }
   }
 
   if (b.questions.length < 1) { showToast('Add at least 1 question', ''); return; }
+
   const ws = {
     id:           b.editId || `custom_${Date.now()}`,
     subject:      b.subject,
@@ -1241,10 +1291,10 @@ function saveBuilderWorksheet() {
     estimatedTime: Math.max(5, b.questions.length * 2),
     questions:    b.questions,
     isTuitionSheet: b.subject === 'tuition',
-    sheetType:    b.subject === 'tuition' ? (b.questions[0]?.sheetType || '4-line') : undefined,
-    instruction:  b.subject === 'tuition' ? (b.questions[0]?.instruction || b.title) : undefined,
-    comments:     b.subject === 'tuition' ? (b.questions[0]?.comments || '') : undefined,
-    sampleText:   b.subject === 'tuition' ? (b.questions[0]?.sampleText || '') : undefined,
+    sheetType:    b.subject === 'tuition' ? (b.sheetType || b.questions[0]?.sheetType || '4-line') : undefined,
+    instruction:  b.subject === 'tuition' ? (b.questions[0]?.instruction || b.description || b.title) : undefined,
+    comments:     b.subject === 'tuition' ? (b.comments || b.questions[0]?.comments || '') : undefined,
+    sampleText:   b.subject === 'tuition' ? (b.sampleText || b.questions[0]?.sampleText || '') : undefined,
     isCustom:     true,
     createdAt:    new Date().toISOString(),
   };
