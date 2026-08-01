@@ -24,6 +24,14 @@ const state = {
 // ══════════════════════════════════════════════════════════════
 // STORAGE
 // ══════════════════════════════════════════════════════════════
+function getSchoolName() {
+  return localStorage.getItem('kw_school_name') || 'Vardhman Srikalyan International School';
+}
+function saveSchoolName(name) {
+  if (name && name.trim()) {
+    localStorage.setItem('kw_school_name', name.trim());
+  }
+}
 function getCustomWorksheets() {
   try { return JSON.parse(localStorage.getItem('kw_custom') || '[]'); } catch { return []; }
 }
@@ -65,7 +73,35 @@ function getAllWorksheets() {
   const defaults = ALL_WORKSHEETS.filter(w => !customIds.has(w.id));
   return [...customs, ...defaults];
 }
-function getWorksheet(id) { return getAllWorksheets().find(w => w.id === id) || null; }
+function getWorksheet(id) {
+  let ws = getAllWorksheets().find(w => w.id === id);
+  if (!ws && (id.startsWith('custom_') || id.startsWith('tt_'))) {
+    ws = {
+      id: id,
+      subject: 'tuition',
+      title: 'Written Test Worksheet',
+      difficulty: 'easy',
+      description: 'Write on the sheet below',
+      isTuitionSheet: true,
+      sheetType: '4-line',
+      instruction: 'Write on the sheet below',
+      comments: '',
+      sampleText: '',
+      questions: [
+        {
+          id: `${id}_q1`,
+          type: 'TUITION_CANVAS',
+          text: 'Write on the sheet below',
+          instruction: 'Write on the sheet below',
+          sheetType: '4-line',
+          comments: '',
+          sampleText: ''
+        }
+      ]
+    };
+  }
+  return ws || null;
+}
 function getWorksheetList(subjectId) { return getAllWorksheets().filter(w => w.subject === subjectId); }
 function badge(d) { return `<span class="badge badge-${d}">${d}</span>`; }
 function formatTime(s) { const m = Math.floor(s/60); return m > 0 ? `${m}m ${s%60}s` : `${s}s`; }
@@ -125,7 +161,7 @@ function renderLanding() {
         </button>
       </div>
       <div class="landing-school">
-        📍 Vardhman Srikalyan International School &nbsp;·&nbsp; UKG-C &nbsp;·&nbsp; Term 1 &nbsp;·&nbsp; 2026–27
+        📍 ${esc(getSchoolName())} &nbsp;·&nbsp; UKG-C &nbsp;·&nbsp; Term 1 &nbsp;·&nbsp; 2026–27
       </div>
     </div>
   `);
@@ -280,10 +316,11 @@ let _tuitionStrokes  = [];
 let _currentStroke   = null;
 
 function renderTuitionSheetPlayer(worksheet, question) {
-  const sheetType   = question.sheetType || worksheet.sheetType || '4-line';
-  const instruction = question.instruction || worksheet.instruction || question.text || 'Write on the sheet below';
-  const comments    = question.comments || worksheet.comments || '';
-  const sampleText  = question.sampleText || worksheet.sampleText || '';
+  const q = question || {};
+  const sheetType   = q.sheetType || worksheet.sheetType || '4-line';
+  const instruction = q.instruction || worksheet.instruction || q.text || worksheet.description || worksheet.title || 'Write on the sheet below';
+  const comments    = q.comments || worksheet.comments || '';
+  const sampleText  = q.sampleText || worksheet.sampleText || '';
 
   const sheetNames = {
     '4-line': '📝 4-Line English Notebook Sheet',
@@ -293,6 +330,16 @@ function renderTuitionSheetPlayer(worksheet, question) {
     'grid':   '🔢 Math Grid Square Box Sheet',
     'blank':  '🎨 Blank Drawing & Writing Canvas'
   };
+
+  const questionsList = (worksheet.questions && worksheet.questions.length > 0)
+    ? worksheet.questions
+    : [{ text: instruction }];
+
+  const allQuestionsHtml = questionsList.map((q, i) => `
+    <div style="font-family:Nunito,sans-serif;font-size:16px;font-weight:800;color:var(--dark-text-primary);margin-bottom:6px">
+      Q${i + 1}: ${esc(q.text || q.instruction || instruction)}
+    </div>
+  `).join('');
 
   const isHindi = worksheet.subject === 'hindi' || sheetType === '3-line' || sheetType === '2-line';
 
@@ -310,7 +357,7 @@ function renderTuitionSheetPlayer(worksheet, question) {
         <div class="tuition-player-card" style="background:var(--dark-surface-1);border-radius:16px;padding:20px;border:2px solid var(--primary);box-shadow:0 8px 32px rgba(0,0,0,0.3)">
           <!-- School Header Banner -->
           <div style="text-align:center;border-bottom:2px dashed var(--dark-border);padding-bottom:14px;margin-bottom:16px">
-            <div style="font-family:Outfit,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--primary-light);text-transform:uppercase">VARDHMAN SRIKALYAN INTERNATIONAL SCHOOL</div>
+            <div style="font-family:Outfit,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--primary-light);text-transform:uppercase">${esc(getSchoolName())}</div>
             <div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:800;color:var(--dark-text-primary);margin:4px 0">${esc(worksheet.title)}</div>
             <div style="font-family:Nunito,sans-serif;font-size:13px;color:var(--dark-text-secondary)">Class: UKG-C &nbsp;·&nbsp; Subject: Written Test &nbsp;·&nbsp; Sheet: ${sheetNames[sheetType] || sheetType}</div>
           </div>
@@ -329,10 +376,8 @@ function renderTuitionSheetPlayer(worksheet, question) {
 
           <!-- Instruction Banner -->
           <div style="background:var(--dark-surface-2);border-radius:12px;padding:14px 18px;margin-bottom:16px;border-left:5px solid var(--accent)">
-            <div style="font-family:Nunito,sans-serif;font-size:16px;font-weight:800;color:var(--dark-text-primary);margin-bottom:4px">
-              Question: ${esc(instruction)}
-            </div>
-            ${comments ? `<div style="font-family:Nunito,sans-serif;font-size:13px;color:var(--dark-text-secondary);font-style:italic">💡 Note: ${esc(comments)}</div>` : ''}
+            ${allQuestionsHtml}
+            ${comments ? `<div style="font-family:Nunito,sans-serif;font-size:13px;color:var(--dark-text-secondary);font-style:italic;margin-top:6px">💡 Note: ${esc(comments)}</div>` : ''}
           </div>
 
           <!-- Interactive Handwriting Canvas (15 Rows) -->
@@ -508,9 +553,9 @@ function submitTuitionWorksheet() {
 
 function renderCurrentQuestion() {
   const { worksheet, questionIndex, total } = state.player;
-  const question = worksheet.questions[questionIndex];
+  const question = (worksheet.questions && worksheet.questions[questionIndex]) || { type: 'TUITION_CANVAS', text: worksheet.instruction || worksheet.title };
 
-  if (worksheet.isTuitionSheet || worksheet.subject === 'tuition' || question.type === 'TUITION_CANVAS') {
+  if (worksheet.isTuitionSheet || worksheet.subject === 'tuition' || (question && question.type === 'TUITION_CANVAS')) {
     return renderTuitionSheetPlayer(worksheet, question);
   }
 
@@ -2707,6 +2752,10 @@ function renderPrint(worksheetId) {
     const instruction = ws.instruction || ws.questions[0]?.instruction || ws.questions[0]?.text || '';
     const comments = ws.comments || ws.questions[0]?.comments || '';
 
+    const printQuestionsHtml = (ws.questions && ws.questions.length > 0)
+      ? ws.questions.map((q, i) => `<div style="font-size:15px;font-weight:700;color:#111;margin-bottom:4px">Q${i+1}: ${esc(q.text || q.instruction || instruction)}</div>`).join('')
+      : `<div style="font-size:15px;font-weight:700;color:#111;margin-bottom:4px">Q1: ${esc(instruction)}</div>`;
+
     setApp(`
       <div class="print-view">
         <div class="no-print" style="position:fixed;top:0;left:0;right:0;background:var(--dark-surface-1);
@@ -2718,9 +2767,9 @@ function renderPrint(worksheetId) {
         <div style="height:60px" class="no-print"></div>
 
         <div class="print-header">
-          <div class="print-school-name">VARDHMAN SRIKALYAN INTERNATIONAL SCHOOL</div>
+          <div class="print-school-name">${esc(getSchoolName())}</div>
           <div class="print-ws-title">${esc(ws.title)}</div>
-          <div class="print-ws-meta">Class: UKG-C &nbsp;·&nbsp; Subject: ${esc(sub.name||'Written Test')} &nbsp;·&nbsp; Difficulty: ${esc(ws.difficulty)} &nbsp;·&nbsp; Total Questions: 10</div>
+          <div class="print-ws-meta">Class: UKG-C &nbsp;·&nbsp; Subject: ${esc(sub.name||'Written Test')} &nbsp;·&nbsp; Difficulty: ${esc(ws.difficulty)} &nbsp;·&nbsp; Total Questions: ${(ws.questions||[]).length||1}</div>
         </div>
         <div class="print-student-row">
           <div><div class="print-field-label">Name</div><div class="print-field"></div></div>
@@ -2728,7 +2777,7 @@ function renderPrint(worksheetId) {
         </div>
 
         <div style="margin-bottom:14px">
-          <div style="font-size:16px;font-weight:700;color:#111">Question: ${esc(instruction)}</div>
+          ${printQuestionsHtml}
           ${comments ? `<div style="font-size:13px;color:#555;font-style:italic;margin-top:4px">Note: ${esc(comments)}</div>` : ''}
         </div>
 
@@ -2737,7 +2786,7 @@ function renderPrint(worksheetId) {
         </div>
 
         <div class="print-footer">
-          Generated by KidWorksheets &nbsp;·&nbsp; Vardhman Srikalyan International School &nbsp;·&nbsp; UKG-C Term 1 · 2026–27
+          Generated by KidWorksheets &nbsp;·&nbsp; ${esc(getSchoolName())} &nbsp;·&nbsp; UKG-C Term 1 · 2026–27
         </div>
       </div>
     `);
@@ -2787,7 +2836,7 @@ function renderPrint(worksheetId) {
       <div style="height:60px" class="no-print"></div>
 
       <div class="print-header">
-        <div class="print-school-name">Vardhman Srikalyan International School</div>
+        <div class="print-school-name">${esc(getSchoolName())}</div>
         <div class="print-ws-title">${esc(ws.title)}</div>
         <div class="print-ws-meta">Class: UKG-C &nbsp;·&nbsp; Subject: ${esc(sub.name||'')} &nbsp;·&nbsp; Difficulty: ${esc(ws.difficulty)} &nbsp;·&nbsp; Total Questions: ${ws.questions.length}</div>
       </div>
@@ -2797,7 +2846,7 @@ function renderPrint(worksheetId) {
       </div>
       ${questionsHtml}
       <div class="print-footer">
-        Generated by KidWorksheets &nbsp;·&nbsp; Vardhman Srikalyan International School &nbsp;·&nbsp; UKG-C Term 1 · 2026–27
+        Generated by KidWorksheets &nbsp;·&nbsp; ${esc(getSchoolName())} &nbsp;·&nbsp; UKG-C Term 1 · 2026–27
       </div>
     </div>
   `);

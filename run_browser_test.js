@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer-core');
 const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 
 (async () => {
-  console.log('🚀 Launching Edge browser for Sheet Type Dropdown Persistence Verification...');
+  console.log('🚀 Debugging custom_1785618174633 in Edge...');
   const browser = await puppeteer.launch({
     executablePath: EDGE_PATH,
     headless: false,
@@ -12,40 +12,17 @@ const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge
   });
 
   const page = await browser.newPage();
-  await page.setCacheEnabled(false);
+  page.on('console', msg => console.log('PAGE LOG:', msg.type(), msg.text()));
+  page.on('pageerror', err => console.log('PAGE ERROR:', err.toString()));
 
-  console.log('🌐 1. Opening Mentor Builder to edit Hindi Copy Work (tt_002)...');
-  await page.goto('http://localhost:3000/#/mentor/builder/tt_002', { waitUntil: 'networkidle0' });
-  await new Promise(r => setTimeout(r, 600));
+  await page.goto('http://localhost:3000/#/child/play/custom_1785618174633', { waitUntil: 'networkidle0' });
+  await new Promise(r => setTimeout(r, 2000));
 
-  const selectedValue002 = await page.evaluate(() => document.getElementById('ws-sheet-type')?.value);
-  console.log('Sheet Type Dropdown Value for tt_002:', selectedValue002);
+  const url = page.url();
+  console.log('Current URL after navigation:', url);
 
-  console.log('🌐 2. Opening Mentor Builder for Maths Numbers Test (tt_003 - Grid)...');
-  await page.goto('http://localhost:3000/#/mentor/builder/tt_003', { waitUntil: 'networkidle0' });
-  await new Promise(r => setTimeout(r, 600));
-
-  const selectedValue003 = await page.evaluate(() => document.getElementById('ws-sheet-type')?.value);
-  console.log('Sheet Type Dropdown Value for tt_003:', selectedValue003);
-
-  console.log('🌐 3. Changing tt_003 to 3-line, saving, and re-opening to verify persistence...');
-  await page.evaluate(() => {
-    const sel = document.getElementById('ws-sheet-type');
-    if (sel) {
-      sel.value = '3-line';
-      sel.dispatchEvent(new Event('change'));
-    }
-  });
-
-  await page.click('#btn-save-ws');
-  await new Promise(r => setTimeout(r, 1000));
-
-  await page.goto('http://localhost:3000/#/mentor/builder/tt_003', { waitUntil: 'networkidle0' });
-  await new Promise(r => setTimeout(r, 600));
-
-  const reSelectedValue = await page.evaluate(() => document.getElementById('ws-sheet-type')?.value);
-  console.log('Re-opened Sheet Type Dropdown Value for tt_003:', reSelectedValue);
+  const html = await page.evaluate(() => document.getElementById('app')?.innerHTML);
+  console.log('App HTML content preview:', html ? html.slice(0, 300) : 'EMPTY');
 
   await browser.close();
-  console.log('🎉 Sheet Type Persistence Verification Finished Successfully!');
 })();

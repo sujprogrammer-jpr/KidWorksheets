@@ -98,6 +98,21 @@ function renderMentorDashboard() {
           <div class="mentor-stat"><div class="ms-val">${progress}</div><div class="ms-lbl">Sessions Done</div></div>
         </div>
 
+        <!-- 🏫 School / Institute Name Setting Card -->
+        <div class="mentor-meta-card" style="margin-top:14px;margin-bottom:20px;background:var(--dark-surface-2);border:2px solid var(--primary);border-radius:14px;padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:15px;font-weight:800;color:var(--primary-light)">🏫 School / Institute Name</div>
+            <span style="font-size:12px;color:var(--dark-text-secondary)">Prints on all worksheets & test banners</span>
+          </div>
+          <div style="display:flex;gap:10px">
+            <input id="f-school-name" class="builder-input" value="${esc(getSchoolName())}" placeholder="Enter School / Institute Name..." style="flex:1;background:var(--dark-surface-1)">
+            <button class="btn btn-primary" onclick="
+              const name = document.getElementById('f-school-name')?.value;
+              if(name){ saveSchoolName(name); showToast('✅ School name updated!', 'success'); }
+            " id="btn-save-school" style="white-space:nowrap">💾 Save Name</button>
+          </div>
+        </div>
+
         <div class="mentor-section-label">📚 Browse by Subject</div>
         <div class="mentor-sub-list">${subCards}</div>
 
@@ -373,6 +388,42 @@ function openQuestionEditor(qIndex) {
 function renderQuestionEditor() {
   const b = state.builder;
   const isEdit = b.editingIndex !== null && b.editingIndex !== undefined;
+
+  if (b.subject === 'tuition') {
+    state.builder.addingType = 'TUITION_CANVAS';
+    const qText = isEdit && b.questions[b.editingIndex] ? (b.questions[b.editingIndex].text || b.questions[b.editingIndex].instruction || '') : '';
+    setApp(`
+      <div class="mentor-screen screen">
+        <div class="mentor-header">
+          <button class="back-btn" onclick="builderCancelEdit()" id="btn-back-qedit">◀ Back to Worksheet</button>
+          <div class="mentor-header-title">${isEdit ? `✏️ Edit Question #${b.editingIndex + 1}` : '➕ Add Written Question'}</div>
+          <button class="btn btn-accent btn-sm" onclick="builderAddQuestion()" id="btn-save-q">💾 Save Question</button>
+        </div>
+
+        <div class="mentor-body">
+          <div class="builder-add-panel" id="builder-add-panel" style="background:var(--dark-surface-2);border-radius:14px;padding:20px;border:2px solid var(--primary)">
+            <div style="font-size:16px;font-weight:800;color:var(--primary-light);margin-bottom:6px">📝 Written Question Prompt</div>
+            <div style="font-size:13px;color:var(--dark-text-secondary);margin-bottom:16px">
+              Enter the question or instruction prompt for this written test question (e.g., "Write capital letters A to Z" or "Write numbers 1 to 50").
+            </div>
+
+            <div class="builder-field">
+              <label for="f-qtext">Question Prompt / Instruction *</label>
+              <textarea id="f-qtext" class="builder-textarea" rows="4" placeholder="e.g. Write letters A to Z in capital letters or Answer: What is your name?">${esc(qText)}</textarea>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:24px">
+              <button class="btn btn-primary" onclick="builderAddQuestion()" id="btn-add-q" style="flex:1;padding:14px">
+                ${isEdit ? `💾 Update Question #${b.editingIndex + 1}` : '➕ Save Question to Worksheet'}
+              </button>
+              <button class="btn btn-secondary" onclick="builderCancelEdit()" id="btn-cancel-edit">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `);
+    return;
+  }
 
   const typePicker = QUESTION_TYPES.filter(t => !t.subjectOnly || t.subjectOnly.includes(b.subject)).map(t => `
     <button class="qtype-card ${b.addingType===t.type?'active':''}"
@@ -1218,6 +1269,13 @@ function _collectQuestion(type) {
         if (!Object.keys(binMap).length) throw new Error('Assign at least 1 word to a vowel bin');
         return { type, text, mode, lang, words, binMap };
       }
+    }
+    case 'TUITION_CANVAS': {
+      const text = _req('f-qtext', 'Question Prompt');
+      const sheetType = document.getElementById('ws-sheet-type')?.value || state.builder.sheetType || '4-line';
+      const comments = document.getElementById('ws-comments')?.value || state.builder.comments || '';
+      const sampleText = document.getElementById('ws-sample')?.value || state.builder.sampleText || '';
+      return { type: 'TUITION_CANVAS', text, instruction: text, sheetType, comments, sampleText };
     }
     default: throw new Error(`Unknown type: ${type}`);
   }
