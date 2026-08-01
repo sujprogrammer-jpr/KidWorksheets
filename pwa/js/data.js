@@ -37,6 +37,12 @@ const SUBJECTS = {
     color: '#F9A8D4', light: '#FFF0F7',
     description: 'Colours & Creative Activities',
     worksheetCount: 1
+  },
+  tuition: {
+    id: 'tuition', name: 'Tuition Test', emoji: '📝',
+    color: '#8B5CF6', light: '#F3E8FF',
+    description: 'Custom Sheet Generator (4-Line, 3-Line, Grid & Blank)',
+    worksheetCount: 4
   }
 };
 
@@ -976,6 +982,98 @@ const INTERACTIVE_WORKSHEETS = [
   },
 ];
 
+// ── TUITION TEST WORKSHEETS (4) ─────────────────────────────────────────────
+const TUITION_WORKSHEETS = [
+  {
+    id: 'tt_001',
+    subject: 'tuition',
+    title: 'English Test (4-Line Sheet)',
+    topic: 'Alphabet & Writing',
+    difficulty: 'easy',
+    estimatedTime: 15,
+    description: 'Write capital and small letters in 4-line notebook pattern.',
+    isTuitionSheet: true,
+    sheetType: '4-line',
+    instruction: 'Write letters A to Z in capital letters',
+    comments: 'Capital letters must sit on the blue baseline and touch the top red headline.',
+    sampleText: 'A  B  C  D  E  F  G  H',
+    questions: [
+      q('tt1q1', 'TUITION_CANVAS', 'Write letters A to Z in capital letters', {
+        sheetType: '4-line',
+        instruction: 'Write letters A to Z in capital letters',
+        comments: 'Capital letters must sit on the blue baseline and touch the top red headline.',
+        sampleText: 'A  B  C  D  E  F  G  H'
+      })
+    ]
+  },
+  {
+    id: 'tt_002',
+    subject: 'tuition',
+    title: 'Hindi Copy Work (3-Line Sheet)',
+    topic: 'शब्द रचना',
+    difficulty: 'easy',
+    estimatedTime: 15,
+    description: 'दो अक्षर वाले शब्द सुंदर अक्षरों में लिखिए।',
+    isTuitionSheet: true,
+    sheetType: '3-line',
+    instruction: 'चल नल पर जल भर — दो अक्षर वाले शब्द लिखिए।',
+    comments: 'शिरोरेखा सीधी खींचिए और अक्षरों की बनावट सुंदर रखिए।',
+    sampleText: 'चल  नल  पर  जल  भर',
+    questions: [
+      q('tt2q1', 'TUITION_CANVAS', 'चल नल पर जल भर — दो अक्षर वाले शब्द लिखिए।', {
+        sheetType: '3-line',
+        instruction: 'चल नल पर जल भर — दो अक्षर वाले शब्द लिखिए।',
+        comments: 'शिरोरेखा सीधी खींचिए और अक्षरों की बनावट सुंदर रखिए।',
+        sampleText: 'चल  नल  पर  जल  भर'
+      })
+    ]
+  },
+  {
+    id: 'tt_003',
+    subject: 'tuition',
+    title: 'Maths Numbers Test (Grid Box Sheet)',
+    topic: 'Number Writing',
+    difficulty: 'easy',
+    estimatedTime: 15,
+    description: 'Write numbers 1 to 50 inside math square boxes.',
+    isTuitionSheet: true,
+    sheetType: 'grid',
+    instruction: 'Write numbers 1 to 50 inside the math boxes',
+    comments: 'Each number must fit neatly inside a single square grid box.',
+    sampleText: '1  2  3  4  5  6  7  8  9  10',
+    questions: [
+      q('tt3q1', 'TUITION_CANVAS', 'Write numbers 1 to 50 inside the math boxes', {
+        sheetType: 'grid',
+        instruction: 'Write numbers 1 to 50 inside the math boxes',
+        comments: 'Each number must fit neatly inside a single square grid box.',
+        sampleText: '1  2  3  4  5  6  7  8  9  10'
+      })
+    ]
+  },
+  {
+    id: 'tt_004',
+    subject: 'tuition',
+    title: 'Creative Writing & Drawing (Blank Sheet)',
+    topic: 'Freehand Writing',
+    difficulty: 'easy',
+    estimatedTime: 15,
+    description: 'Draw or write anything creative on the blank canvas.',
+    isTuitionSheet: true,
+    sheetType: 'blank',
+    instruction: 'Draw your favourite fruit or write a sentence about your school',
+    comments: 'Express your creativity using pen colors.',
+    sampleText: '',
+    questions: [
+      q('tt4q1', 'TUITION_CANVAS', 'Draw your favourite fruit or write a sentence about your school', {
+        sheetType: 'blank',
+        instruction: 'Draw your favourite fruit or write a sentence about your school',
+        comments: 'Express your creativity using pen colors.',
+        sampleText: ''
+      })
+    ]
+  }
+];
+
 const ALL_WORKSHEETS = [
 
   ...ENG_WORKSHEETS,
@@ -984,6 +1082,7 @@ const ALL_WORKSHEETS = [
   ...HINDI_WORKSHEETS,
   ...ART_WORKSHEETS,
   ...INTERACTIVE_WORKSHEETS,
+  ...TUITION_WORKSHEETS,
 ];
 
 

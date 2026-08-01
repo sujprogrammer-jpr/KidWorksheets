@@ -268,10 +268,248 @@ function renderPlayer(worksheetId) {
   renderCurrentQuestion();
 }
 
+let _tuitionPenColor = '#2D2D3A';
+let _tuitionPenWidth = 4;
+let _tuitionEraser   = false;
+let _tuitionStrokes  = [];
+let _currentStroke   = null;
+
+function renderTuitionSheetPlayer(worksheet, question) {
+  const sheetType   = question.sheetType || worksheet.sheetType || '4-line';
+  const instruction = question.instruction || worksheet.instruction || question.text || 'Write on the sheet below';
+  const comments    = question.comments || worksheet.comments || '';
+  const sampleText  = question.sampleText || worksheet.sampleText || '';
+
+  const sheetNames = {
+    '4-line': '📝 4-Line English Notebook Sheet',
+    '3-line': '🇮🇳 3-Line Hindi Notebook Sheet',
+    '2-line': '✍️ 2-Line Hindi Notebook Sheet',
+    '1-line': '📄 Single Line Notebook Sheet',
+    'grid':   '🔢 Math Grid Square Box Sheet',
+    'blank':  '🎨 Blank Drawing & Writing Canvas'
+  };
+
+  const isHindi = worksheet.subject === 'hindi' || sheetType === '3-line' || sheetType === '2-line';
+
+  setApp(`
+    <div class="player-screen${isHindi ? ' hindi-subject' : ''} screen">
+      <div class="player-top-bar">
+        <div class="player-top-row">
+          <button class="back-btn" onclick="navigate('/child/subject/tuition')" id="btn-back-play">◀ Back</button>
+          <div class="player-q-label">${esc(worksheet.title)}</div>
+          <button class="player-quit-btn" onclick="confirmQuit()" id="btn-quit">✕</button>
+        </div>
+      </div>
+
+      <div class="player-body" style="padding:16px;max-width:900px;margin:0 auto">
+        <div class="tuition-player-card" style="background:var(--dark-surface-1);border-radius:16px;padding:20px;border:2px solid var(--primary);box-shadow:0 8px 32px rgba(0,0,0,0.3)">
+          <!-- School Header Banner -->
+          <div style="text-align:center;border-bottom:2px dashed var(--dark-border);padding-bottom:14px;margin-bottom:16px">
+            <div style="font-family:Outfit,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--primary-light);text-transform:uppercase">VARDHMAN SRIKALYAN INTERNATIONAL SCHOOL</div>
+            <div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:800;color:var(--dark-text-primary);margin:4px 0">${esc(worksheet.title)}</div>
+            <div style="font-family:Nunito,sans-serif;font-size:13px;color:var(--dark-text-secondary)">Class: UKG-C &nbsp;·&nbsp; Subject: Tuition Test &nbsp;·&nbsp; Sheet: ${sheetNames[sheetType] || sheetType}</div>
+          </div>
+
+          <!-- Student Name & Date Row -->
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+            <div style="flex:1;min-width:200px">
+              <label style="font-size:12px;font-weight:700;color:var(--dark-text-secondary);display:block;margin-bottom:4px">Student Name</label>
+              <input class="builder-input" id="tuition-name-input" placeholder="Enter student name..." style="background:var(--dark-surface-2)">
+            </div>
+            <div style="width:180px">
+              <label style="font-size:12px;font-weight:700;color:var(--dark-text-secondary);display:block;margin-bottom:4px">Date</label>
+              <input class="builder-input" id="tuition-date-input" type="date" style="background:var(--dark-surface-2)" value="${new Date().toISOString().split('T')[0]}">
+            </div>
+          </div>
+
+          <!-- Instruction Banner -->
+          <div style="background:var(--dark-surface-2);border-radius:12px;padding:14px 18px;margin-bottom:16px;border-left:5px solid var(--accent)">
+            <div style="font-family:Nunito,sans-serif;font-size:16px;font-weight:800;color:var(--dark-text-primary);margin-bottom:4px">
+              Question: ${esc(instruction)}
+            </div>
+            ${comments ? `<div style="font-family:Nunito,sans-serif;font-size:13px;color:var(--dark-text-secondary);font-style:italic">💡 Note: ${esc(comments)}</div>` : ''}
+          </div>
+
+          <!-- Interactive Handwriting Canvas -->
+          <div class="tuition-canvas-container" style="position:relative;width:100%;height:520px;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.4)">
+            <canvas id="tuition-bg-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1"></canvas>
+            <canvas id="tuition-draw-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;touch-action:none;cursor:crosshair"></canvas>
+          </div>
+
+          <!-- Drawing Toolbar Controls -->
+          <div class="tuition-toolbar" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;background:var(--dark-surface-2);padding:12px 16px;border-radius:12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:13px;font-weight:700;color:var(--dark-text-secondary)">Color:</span>
+              ${['#2D2D3A','#2B7FFF','#E53935','#22C55E','#8B5CF6'].map((c, i) => `
+                <button class="color-swatch${i===0?' active':''}" onclick="setTuitionPenColor('${c}')" style="background:${c};width:28px;height:28px;border-radius:50%;border:2px solid white;cursor:pointer" id="tpc-${i}"></button>
+              `).join('')}
+            </div>
+
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="stroke-btn active" onclick="setTuitionPenWidth(2,'thin')" id="tpw-thin">Thin</button>
+              <button class="stroke-btn" onclick="setTuitionPenWidth(4,'med')" id="tpw-med">Med</button>
+              <button class="stroke-btn" onclick="setTuitionPenWidth(8,'thick')" id="tpw-thick">Thick</button>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="eraser-btn" onclick="toggleTuitionEraser()" id="btn-t-eraser">⬜ Eraser</button>
+              <button class="btn btn-dark btn-sm" onclick="undoTuitionStroke()" id="btn-t-undo">↩ Undo</button>
+              <button class="btn btn-dark btn-sm" onclick="clearTuitionCanvas()" id="btn-t-clear">🗑 Clear</button>
+              <button class="btn btn-primary" onclick="submitTuitionWorksheet()" id="btn-t-submit">✓ Submit Test</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `);
+
+  setTimeout(() => initTuitionCanvas(sheetType, sampleText), 50);
+}
+
+function initTuitionCanvas(sheetType, sampleText) {
+  const bgCanvas = document.getElementById('tuition-bg-canvas');
+  const drawCanvas = document.getElementById('tuition-draw-canvas');
+  if (!bgCanvas || !drawCanvas) return;
+
+  const container = drawCanvas.parentElement;
+  const W = container.clientWidth || 800;
+  const H = container.clientHeight || 520;
+
+  bgCanvas.width = W; bgCanvas.height = H;
+  drawCanvas.width = W; drawCanvas.height = H;
+
+  const bgCtx = bgCanvas.getContext('2d');
+  drawTuitionNotebookLines(bgCtx, W, H, sheetType, sampleText);
+
+  _tuitionStrokes = [];
+  _currentStroke = null;
+
+  const ctx = drawCanvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  let drawing = false;
+
+  const getPointerPos = (e) => {
+    const rect = drawCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const startDraw = (e) => {
+    drawing = true;
+    const pos = getPointerPos(e);
+    _currentStroke = {
+      color: _tuitionEraser ? '#FEFCF7' : _tuitionPenColor,
+      width: _tuitionEraser ? 20 : _tuitionPenWidth,
+      isEraser: _tuitionEraser,
+      points: [pos]
+    };
+    ctx.strokeStyle = _currentStroke.color;
+    ctx.lineWidth = _currentStroke.width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  };
+
+  const moveDraw = (e) => {
+    if (!drawing || !_currentStroke) return;
+    const pos = getPointerPos(e);
+    _currentStroke.points.push(pos);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  };
+
+  const stopDraw = () => {
+    if (drawing && _currentStroke && _currentStroke.points.length > 0) {
+      _tuitionStrokes.push(_currentStroke);
+    }
+    drawing = false;
+    _currentStroke = null;
+  };
+
+  drawCanvas.onpointerdown = startDraw;
+  drawCanvas.onpointermove = moveDraw;
+  drawCanvas.onpointerup = stopDraw;
+  drawCanvas.onpointercancel = stopDraw;
+}
+
+function setTuitionPenColor(color) {
+  _tuitionPenColor = color;
+  _tuitionEraser = false;
+  const eb = document.getElementById('btn-t-eraser'); if (eb) eb.classList.remove('active');
+  document.querySelectorAll('.color-swatch').forEach((el) => {
+    el.classList.toggle('active', el.style.background === color || el.getAttribute('style')?.includes(color));
+  });
+}
+
+function setTuitionPenWidth(w, id) {
+  _tuitionPenWidth = w;
+  document.querySelectorAll('.stroke-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`tpw-${id}`); if (btn) btn.classList.add('active');
+}
+
+function toggleTuitionEraser() {
+  _tuitionEraser = !_tuitionEraser;
+  const eb = document.getElementById('btn-t-eraser');
+  if (eb) eb.classList.toggle('active', _tuitionEraser);
+}
+
+function undoTuitionStroke() {
+  if (_tuitionStrokes.length > 0) {
+    _tuitionStrokes.pop();
+    redrawTuitionStrokes();
+  }
+}
+
+function clearTuitionCanvas() {
+  _tuitionStrokes = [];
+  redrawTuitionStrokes();
+}
+
+function redrawTuitionStrokes() {
+  const drawCanvas = document.getElementById('tuition-draw-canvas');
+  if (!drawCanvas) return;
+  const ctx = drawCanvas.getContext('2d');
+  ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+
+  _tuitionStrokes.forEach(stroke => {
+    if (!stroke.points || stroke.points.length < 1) return;
+    ctx.strokeStyle = stroke.color;
+    ctx.lineWidth = stroke.width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+    for (let i = 1; i < stroke.points.length; i++) {
+      ctx.lineTo(stroke.points[i].i || stroke.points[i].x, stroke.points[i].y);
+    }
+    ctx.stroke();
+  });
+}
+
+function submitTuitionWorksheet() {
+  if (!state.player) return;
+  const { worksheetId } = state.player;
+  saveProgress(worksheetId, 100, 3);
+  if (typeof spawnConfetti === 'function') spawnConfetti();
+  showToast('🎉 Tuition Test Submitted Successfully!', 'success');
+
+  setTimeout(() => {
+    navigate('/child/results');
+  }, 1200);
+}
+
 function renderCurrentQuestion() {
   const { worksheet, questionIndex, total } = state.player;
-  const sub = SUBJECTS[worksheet.subject] || {};
   const question = worksheet.questions[questionIndex];
+
+  if (worksheet.isTuitionSheet || worksheet.subject === 'tuition' || question.type === 'TUITION_CANVAS') {
+    return renderTuitionSheetPlayer(worksheet, question);
+  }
+
+  const sub = SUBJECTS[worksheet.subject] || {};
   const pct = Math.round((questionIndex / total) * 100);
   const isHindi = worksheet.subject === 'hindi';
 
@@ -1042,6 +1280,137 @@ function drawSheetLines(ctx, W, H) {
     // Blank
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, W, H);
+  }
+}
+
+// ── Draw Full-Page Tuition Notebook Lines ──────────────────────
+function drawTuitionNotebookLines(ctx, W, H, sheetType, sampleText) {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#FEFCF7';
+  ctx.fillRect(0, 0, W, H);
+
+  const marginX = 45;
+
+  if (sheetType === '4-line') {
+    // English 4-Line Notebook Pattern (Red, Blue Dash, Blue, Red)
+    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
+
+    const bandH = 65, gap = 22, startY = 25;
+    let y = startY;
+    let isTopBand = true;
+
+    while (y + bandH <= H - 10) {
+      const y1 = y;
+      const y2 = y + bandH * 0.33;
+      const y3 = y + bandH * 0.67;
+      const y4 = y + bandH;
+
+      ctx.strokeStyle = 'rgba(255, 75, 75, 0.15)'; ctx.lineWidth = 1;
+      ctx.strokeRect(marginX + 6, y1 - 2, W - marginX - 12, bandH + 4);
+
+      ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 2; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y1); ctx.lineTo(W - 12, y1); ctx.stroke();
+
+      ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y2); ctx.lineTo(W - 12, y2); ctx.stroke();
+
+      ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 2; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y3); ctx.lineTo(W - 12, y3); ctx.stroke();
+
+      ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 2; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y4); ctx.lineTo(W - 12, y4); ctx.stroke();
+
+      if (isTopBand && sampleText) {
+        ctx.save();
+        ctx.font = `bold 28px Nunito, sans-serif`;
+        ctx.fillStyle = 'rgba(108, 99, 255, 0.3)';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.fillText(sampleText, marginX + 16, y3);
+        ctx.restore();
+        isTopBand = false;
+      }
+
+      y += bandH + gap;
+    }
+  } else if (sheetType === '3-line') {
+    // Hindi 3-Line Notebook Pattern (Red Shiro-rekha, Blue Dash, Red Baseline)
+    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
+
+    const bandH = 55, gap = 20, startY = 25;
+    let y = startY;
+    let isTopBand = true;
+
+    while (y + bandH <= H - 10) {
+      const y1 = y;
+      const y2 = y + bandH * 0.5;
+      const y3 = y + bandH;
+
+      ctx.strokeStyle = '#F48FB1'; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+      ctx.strokeRect(marginX + 6, y1 - 4, W - marginX - 12, bandH + 8);
+
+      ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y1); ctx.lineTo(W - 12, y1); ctx.stroke();
+
+      ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y2); ctx.lineTo(W - 12, y2); ctx.stroke();
+
+      ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y3); ctx.lineTo(W - 12, y3); ctx.stroke();
+
+      if (isTopBand && sampleText) {
+        ctx.save();
+        ctx.font = `bold 28px Hind, sans-serif`;
+        ctx.fillStyle = 'rgba(43, 127, 255, 0.4)';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.fillText(sampleText, marginX + 20, y3 - 2);
+        ctx.restore();
+        isTopBand = false;
+      }
+
+      y += bandH + gap;
+    }
+  } else if (sheetType === '2-line') {
+    // Hindi 2-Line Pattern
+    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
+
+    const bandH = 50, gap = 20, startY = 25;
+    let y = startY;
+    while (y + bandH <= H - 10) {
+      ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y); ctx.lineTo(W - 12, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y + bandH); ctx.lineTo(W - 12, y + bandH); ctx.stroke();
+      y += bandH + gap;
+    }
+  } else if (sheetType === '1-line') {
+    // Single Line Notebook Pattern
+    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
+
+    const lineGap = 40, startY = 40;
+    ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 1.5;
+    for (let y = startY; y <= H - 20; y += lineGap) {
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y); ctx.lineTo(W - 12, y); ctx.stroke();
+    }
+  } else if (sheetType === 'grid') {
+    // Maths Square Grid Pattern
+    const cell = 45;
+    ctx.strokeStyle = '#CFD8DC'; ctx.lineWidth = 1; ctx.setLineDash([]);
+    for (let x = 0; x <= W; x += cell) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y <= H; y += cell) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cell * 2, 0); ctx.lineTo(cell * 2, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cell * 2 + 4, 0); ctx.lineTo(cell * 2 + 4, H); ctx.stroke();
+  } else {
+    // Blank Canvas
+    ctx.strokeStyle = '#333333'; ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.strokeRect(10, 10, W - 20, H - 20);
   }
 }
 
@@ -2347,6 +2716,59 @@ function renderPrint(worksheetId) {
   if (!ws) return navigate('/mentor');
   const sub = SUBJECTS[ws.subject] || {};
   _ansKeyVisible = false;
+
+  if (ws.isTuitionSheet || ws.subject === 'tuition') {
+    const sheetType = ws.sheetType || ws.questions[0]?.sheetType || '4-line';
+    const sampleText = ws.sampleText || ws.questions[0]?.sampleText || '';
+    const instruction = ws.instruction || ws.questions[0]?.instruction || ws.questions[0]?.text || '';
+    const comments = ws.comments || ws.questions[0]?.comments || '';
+
+    setApp(`
+      <div class="print-view">
+        <div class="no-print" style="position:fixed;top:0;left:0;right:0;background:var(--dark-surface-1);
+          border-bottom:1px solid var(--dark-border);padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:200">
+          <button class="btn btn-dark btn-sm" onclick="navigate('/mentor/subject/${ws.subject}')" id="btn-back-print">← Back</button>
+          <span style="flex:1;color:var(--dark-text-primary);font-size:14px;font-weight:600">Print Preview: ${esc(ws.title)}</span>
+          <button class="btn btn-primary btn-sm" onclick="window.print()" id="btn-print">🖨 Print</button>
+        </div>
+        <div style="height:60px" class="no-print"></div>
+
+        <div class="print-header">
+          <div class="print-school-name">VARDHMAN SRIKALYAN INTERNATIONAL SCHOOL</div>
+          <div class="print-ws-title">${esc(ws.title)}</div>
+          <div class="print-ws-meta">Class: UKG-C &nbsp;·&nbsp; Subject: ${esc(sub.name||'Tuition Test')} &nbsp;·&nbsp; Difficulty: ${esc(ws.difficulty)} &nbsp;·&nbsp; Total Questions: 10</div>
+        </div>
+        <div class="print-student-row">
+          <div><div class="print-field-label">Name</div><div class="print-field"></div></div>
+          <div><div class="print-field-label">Date</div><div class="print-field"></div></div>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <div style="font-size:16px;font-weight:700;color:#111">Question: ${esc(instruction)}</div>
+          ${comments ? `<div style="font-size:13px;color:#555;font-style:italic;margin-top:4px">Note: ${esc(comments)}</div>` : ''}
+        </div>
+
+        <div class="print-tuition-sheet-wrap" style="width:100%;margin-top:10px">
+          <canvas id="print-tuition-canvas" style="width:100%;height:750px;border:1px solid #ccc;border-radius:4px;background:#FEFCF7"></canvas>
+        </div>
+
+        <div class="print-footer">
+          Generated by KidWorksheets &nbsp;·&nbsp; Vardhman Srikalyan International School &nbsp;·&nbsp; UKG-C Term 1 · 2026–27
+        </div>
+      </div>
+    `);
+
+    setTimeout(() => {
+      const cvs = document.getElementById('print-tuition-canvas');
+      if (cvs) {
+        cvs.width = cvs.clientWidth || 800;
+        cvs.height = 750;
+        const ctx = cvs.getContext('2d');
+        drawTuitionNotebookLines(ctx, cvs.width, cvs.height, sheetType, sampleText);
+      }
+    }, 50);
+    return;
+  }
 
   const questionsHtml = ws.questions.map((q, i) => {
     let ansArea = '';

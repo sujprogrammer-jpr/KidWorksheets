@@ -268,11 +268,36 @@ function _renderBuilderUI() {
             </div>
           </div>
           <div class="builder-field">
-            <label for="ws-desc">Description (optional)</label>
-            <input id="ws-desc" class="builder-input" placeholder="Short description…"
+            <label for="ws-desc">Description / Instructions (optional)</label>
+            <input id="ws-desc" class="builder-input" placeholder="e.g. Write letters A to Z in capital letters"
               value="${esc(b.description)}" oninput="state.builder.description=this.value">
           </div>
         </div>
+
+        ${b.subject === 'tuition' ? `
+          <div class="builder-meta-card" style="margin-top:14px;border:2px solid var(--primary);background:var(--dark-surface-2)">
+            <div style="font-size:15px;font-weight:800;color:var(--primary-light);margin-bottom:10px">📝 Tuition Test Sheet Configuration</div>
+            <div class="builder-field">
+              <label for="ws-sheet-type">Sheet Pattern Type *</label>
+              <select id="ws-sheet-type" class="builder-select" onchange="if(state.builder.questions[0]) state.builder.questions[0].sheetType = this.value">
+                <option value="4-line">📝 4-Line Notebook Sheet (English Pattern)</option>
+                <option value="3-line">🇮🇳 3-Line Notebook Sheet (Hindi Pattern with Shiro-rekha)</option>
+                <option value="2-line">✍️ 2-Line Notebook Sheet (Hindi Pattern)</option>
+                <option value="1-line">📄 Single Line Notebook Sheet</option>
+                <option value="grid">🔢 Math Grid Square Boxes (Maths Pattern)</option>
+                <option value="blank">🎨 Blank Writing & Drawing Canvas</option>
+              </select>
+            </div>
+            <div class="builder-field">
+              <label for="ws-comments">Comments / Teacher Notes (optional)</label>
+              <input id="ws-comments" class="builder-input" placeholder="e.g. Capital letters must sit on blue baseline" oninput="if(state.builder.questions[0]) state.builder.questions[0].comments = this.value">
+            </div>
+            <div class="builder-field">
+              <label for="ws-sample">Sample Guide Text (optional — printed faintly on top line)</label>
+              <input id="ws-sample" class="builder-input" placeholder="e.g. चल नल पर जल भर" oninput="if(state.builder.questions[0]) state.builder.questions[0].sampleText = this.value">
+            </div>
+          </div>
+        ` : ''}
 
         <!-- ── Question list section ───────────────────── -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -399,6 +424,7 @@ function _renderQTypeForm(type) {
     case 'NUMBER_WRITE':      return _formNumberWrite();
     case 'GROUPS_OF_TENS':    return _formGroupsOfTens();
     case 'READ_AND_ANSWER':   return _formReadAndAnswer();
+    case 'TUITION_CANVAS':    return _formTuitionCanvas();
     default:                  return _formMCQ();
   }
 }
@@ -585,6 +611,24 @@ function _formReadAndAnswer() { return `
     ${_fld('f-qtext','Question Text *','e.g. What color is Sam\'s ball?')}
     ${_fld('f-answer','Correct Answer *','e.g. red')}
     ${_fld('f-hint','Hint (optional)','')}
+  </div>`; }
+
+function _formTuitionCanvas() { return `
+  <div class="builder-form-section">
+    ${_fld('f-qtext','Question Instruction *','e.g. Write letters A to Z in capital letters')}
+    <div class="builder-field">
+      <label>Sheet Type *</label>
+      <select id="f-tc-sheet" class="builder-select">
+        <option value="4-line">📝 4-Line Notebook Sheet (English Pattern)</option>
+        <option value="3-line">🇮🇳 3-Line Notebook Sheet (Hindi Pattern with Shiro-rekha)</option>
+        <option value="2-line">✍️ 2-Line Notebook Sheet (Hindi Pattern)</option>
+        <option value="1-line">📄 Single Line Notebook Sheet</option>
+        <option value="grid">🔢 Math Grid Square Boxes (Maths Pattern)</option>
+        <option value="blank">🎨 Blank Writing & Drawing Canvas</option>
+      </select>
+    </div>
+    ${_fld('f-tc-comments','Comments / Teacher Notes (optional)','e.g. Capital letters must sit on blue baseline')}
+    ${_fld('f-tc-sample','Sample Guide Text (optional — printed faintly on top line)','e.g. चल नल पर जल भर')}
   </div>`; }
 
 function _formCircleFind() { return `
@@ -936,6 +980,13 @@ function _populateQuestionForm(q) {
         if (q.audioSrc) _audioDataUrl = q.audioSrc;
         break;
       }
+      case 'TUITION_CANVAS': {
+        setV('f-qtext', q.text || q.instruction || '');
+        setV('f-tc-sheet', q.sheetType || '4-line');
+        setV('f-tc-comments', q.comments || '');
+        setV('f-tc-sample', q.sampleText || '');
+        break;
+      }
     }
   } catch (_) {}
 }
@@ -1042,6 +1093,13 @@ function _collectQuestion(type) {
       const text = _req('f-qtext','Question text');
       const answer = _req('f-answer','Correct answer');
       return { type, text, passage, answer, hint:_get('f-hint') };
+    }
+    case 'TUITION_CANVAS': {
+      const text = _req('f-qtext','Question Instruction');
+      const sheetType = _get('f-tc-sheet') || '4-line';
+      const comments = _get('f-tc-comments') || '';
+      const sampleText = _get('f-tc-sample') || '';
+      return { type, text, sheetType, instruction: text, comments, sampleText };
     }
     case 'CIRCLE_FIND': {
       const text         = _req('f-qtext','Instruction Text');
@@ -1154,7 +1212,24 @@ function builderDeleteQ(idx) {
 // ── Save worksheet to localStorage ───────────────────────────
 function saveBuilderWorksheet() {
   const b = state.builder;
-  if (!b.title.trim())        { showToast('Please enter a worksheet title', ''); return; }
+  if (!b.title.trim()) { showToast('Please enter a worksheet title', ''); return; }
+
+  if (b.subject === 'tuition' && b.questions.length === 0) {
+    const sheetType = document.getElementById('ws-sheet-type')?.value || '4-line';
+    const comments = document.getElementById('ws-comments')?.value || b.description || '';
+    const sampleText = document.getElementById('ws-sample')?.value || '';
+    b.questions.push({
+      id: `custom_q_${Date.now()}`,
+      type: 'TUITION_CANVAS',
+      text: b.description || b.title,
+      instruction: b.description || b.title,
+      sheetType,
+      comments,
+      sampleText,
+      marks: 1
+    });
+  }
+
   if (b.questions.length < 1) { showToast('Add at least 1 question', ''); return; }
   const ws = {
     id:           b.editId || `custom_${Date.now()}`,
@@ -1165,6 +1240,11 @@ function saveBuilderWorksheet() {
     description:  b.description.trim(),
     estimatedTime: Math.max(5, b.questions.length * 2),
     questions:    b.questions,
+    isTuitionSheet: b.subject === 'tuition',
+    sheetType:    b.subject === 'tuition' ? (b.questions[0]?.sheetType || '4-line') : undefined,
+    instruction:  b.subject === 'tuition' ? (b.questions[0]?.instruction || b.title) : undefined,
+    comments:     b.subject === 'tuition' ? (b.questions[0]?.comments || '') : undefined,
+    sampleText:   b.subject === 'tuition' ? (b.questions[0]?.sampleText || '') : undefined,
     isCustom:     true,
     createdAt:    new Date().toISOString(),
   };
