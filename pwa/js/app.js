@@ -24,6 +24,14 @@ const state = {
 // ══════════════════════════════════════════════════════════════
 // STORAGE
 // ══════════════════════════════════════════════════════════════
+function getSchoolName() {
+  return localStorage.getItem('kw_school_name') || 'Vardhman Srikalyan International School';
+}
+function saveSchoolName(name) {
+  if (name && name.trim()) {
+    localStorage.setItem('kw_school_name', name.trim());
+  }
+}
 function getCustomWorksheets() {
   try { return JSON.parse(localStorage.getItem('kw_custom') || '[]'); } catch { return []; }
 }
@@ -59,8 +67,41 @@ function setApp(html) {
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function getAllWorksheets() { return [...ALL_WORKSHEETS, ...getCustomWorksheets()]; }
-function getWorksheet(id) { return getAllWorksheets().find(w => w.id === id) || null; }
+function getAllWorksheets() {
+  const customs = getCustomWorksheets();
+  const customIds = new Set(customs.map(c => c.id));
+  const defaults = ALL_WORKSHEETS.filter(w => !customIds.has(w.id));
+  return [...customs, ...defaults];
+}
+function getWorksheet(id) {
+  let ws = getAllWorksheets().find(w => w.id === id);
+  if (!ws && (id.startsWith('custom_') || id.startsWith('tt_'))) {
+    ws = {
+      id: id,
+      subject: 'tuition',
+      title: 'Written Test Worksheet',
+      difficulty: 'easy',
+      description: 'Write on the sheet below',
+      isTuitionSheet: true,
+      sheetType: '4-line',
+      instruction: 'Write on the sheet below',
+      comments: '',
+      sampleText: '',
+      questions: [
+        {
+          id: `${id}_q1`,
+          type: 'TUITION_CANVAS',
+          text: 'Write on the sheet below',
+          instruction: 'Write on the sheet below',
+          sheetType: '4-line',
+          comments: '',
+          sampleText: ''
+        }
+      ]
+    };
+  }
+  return ws || null;
+}
 function getWorksheetList(subjectId) { return getAllWorksheets().filter(w => w.subject === subjectId); }
 function badge(d) { return `<span class="badge badge-${d}">${d}</span>`; }
 function formatTime(s) { const m = Math.floor(s/60); return m > 0 ? `${m}m ${s%60}s` : `${s}s`; }
@@ -87,6 +128,7 @@ function router() {
     if (seg[1] === 'subject' && seg[2]) return renderMentorSubject(seg[2]);
     if (seg[1] === 'builder') return renderBuilder(seg[2] || null);
     if (seg[1] === 'print' && seg[2]) return renderPrint(seg[2]);
+    if (seg[1] === 'trace-report') return renderTracingReport();
     return renderMentorDashboard();
   }
   renderLanding();
@@ -119,7 +161,7 @@ function renderLanding() {
         </button>
       </div>
       <div class="landing-school">
-        📍 Vardhman Srikalyan International School &nbsp;·&nbsp; UKG-C &nbsp;·&nbsp; Term 1 &nbsp;·&nbsp; 2026–27
+        📍 ${esc(getSchoolName())} &nbsp;·&nbsp; UKG-C &nbsp;·&nbsp; Term 1 &nbsp;·&nbsp; 2026–27
       </div>
     </div>
   `);
@@ -183,6 +225,30 @@ function renderSubjectWorksheets(subjectId) {
   const wsList = getWorksheetList(subjectId);
   const progress = getProgress();
 
+  const tracingCardMap = {
+    english: { title: '✏️ English Alphabet Tracing Practice (4-Lines)', desc: 'Practice capital A-Z with accurate 4-line notebook guide', sheet: '4-Line Notebook' },
+    hindi:   { title: '✏️ Hindi Swar & Vyanjan Tracing Practice (3-Lines / 2-Lines)', desc: 'Practice Hindi letters (अ-ह) with शिरोरेखा 3-line guide', sheet: '3-Line Notebook' },
+    maths:   { title: '✏️ Number & Digit Tracing Practice (Math Boxes / Grid)', desc: 'Practice numbers 0-9 inside Math square grid boxes', sheet: 'Math Grid Notebook' },
+    ga:      { title: '✏️ Letter & Number Tracing Practice', desc: 'Trace letters & numbers on lined paper', sheet: 'Interactive Canvas' },
+    art:     { title: '✏️ Freehand Drawing & Tracing Canvas', desc: 'Draw, sketch and trace freely', sheet: 'Blank Canvas' }
+  };
+  const tInfo = tracingCardMap[subjectId] || tracingCardMap.english;
+
+  const tracingHeaderCard = `
+    <div class="tracing-featured-card" onclick="navigate('/child/trace/${subjectId}')" id="btn-trace-featured"
+      style="background:var(--dark-surface-1);border:2px solid var(--primary);border-radius:16px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.2s ease">
+      <div style="font-size:32px;background:${sub.light};width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center">✏️</div>
+      <div style="flex:1">
+        <div style="font-family:Nunito,sans-serif;font-size:16px;font-weight:800;color:var(--dark-text-primary);margin-bottom:4px">${esc(tInfo.title)}</div>
+        <div style="font-family:Nunito,sans-serif;font-size:12px;color:var(--dark-text-secondary);margin-bottom:6px">${esc(tInfo.desc)}</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge badge-easy" style="background:var(--primary);color:white">${tInfo.sheet}</span>
+          <span style="font-size:11px;font-weight:700;color:var(--accent)">⭐ Tracing Worksheet</span>
+        </div>
+      </div>
+      <div style="font-family:Nunito,sans-serif;font-size:13px;font-weight:800;color:var(--primary-light);background:rgba(108,99,255,0.15);padding:8px 14px;border-radius:10px">▶ START</div>
+    </div>`;
+
   const cards = wsList.map((ws, idx) => {
     const p = progress[ws.id];
     const pct = p ? p.pct : 0;
@@ -215,6 +281,7 @@ function renderSubjectWorksheets(subjectId) {
         ${esc(sub.description)} &nbsp;·&nbsp; ${wsList.length} worksheets
       </div>
       <div class="worksheet-list-body">
+        ${tracingHeaderCard}
         ${cards || `<div class="empty-state" style="color:var(--light-text-secondary)"><div class="empty-icon">📭</div><h3>No worksheets yet</h3><p>Ask your mentor to add worksheets!</p></div>`}
       </div>
     </div>
@@ -242,20 +309,267 @@ function renderPlayer(worksheetId) {
   renderCurrentQuestion();
 }
 
+let _tuitionPenColor = '#2D2D3A';
+let _tuitionPenWidth = 4;
+let _tuitionEraser   = false;
+let _tuitionStrokes  = [];
+let _currentStroke   = null;
+
+function renderTuitionSheetPlayer(worksheet, question) {
+  const q = question || {};
+  const sheetType   = q.sheetType || worksheet.sheetType || '4-line';
+  const instruction = q.instruction || worksheet.instruction || q.text || worksheet.description || worksheet.title || 'Write on the sheet below';
+  const comments    = q.comments || worksheet.comments || '';
+  const sampleText  = q.sampleText || worksheet.sampleText || '';
+
+  const sheetNames = {
+    '4-line': '📝 4-Line English Notebook Sheet',
+    '3-line': '🇮🇳 3-Line Hindi Notebook Sheet',
+    '2-line': '✍️ 2-Line Hindi Notebook Sheet',
+    '1-line': '📄 Single Line Notebook Sheet',
+    'grid':   '🔢 Math Grid Square Box Sheet',
+    'blank':  '🎨 Blank Drawing & Writing Canvas'
+  };
+
+  const questionsList = (worksheet.questions && worksheet.questions.length > 0)
+    ? worksheet.questions
+    : [{ text: instruction }];
+
+  const allQuestionsHtml = questionsList.map((q, i) => `
+    <div style="font-family:Nunito,sans-serif;font-size:16px;font-weight:800;color:var(--dark-text-primary);margin-bottom:6px">
+      Q${i + 1}: ${esc(q.text || q.instruction || instruction)}
+    </div>
+  `).join('');
+
+  const isHindi = worksheet.subject === 'hindi' || sheetType === '3-line' || sheetType === '2-line';
+
+  setApp(`
+    <div class="player-screen${isHindi ? ' hindi-subject' : ''} screen">
+      <div class="player-top-bar">
+        <div class="player-top-row">
+          <button class="back-btn" onclick="navigate('/child/subject/tuition')" id="btn-back-play">◀ Back</button>
+          <div class="player-q-label">${esc(worksheet.title)}</div>
+          <button class="player-quit-btn" onclick="confirmQuit()" id="btn-quit">✕</button>
+        </div>
+      </div>
+
+      <div class="player-body" style="padding:16px;max-width:900px;margin:0 auto">
+        <div class="tuition-player-card" style="background:var(--dark-surface-1);border-radius:16px;padding:20px;border:2px solid var(--primary);box-shadow:0 8px 32px rgba(0,0,0,0.3)">
+          <!-- School Header Banner -->
+          <div style="text-align:center;border-bottom:2px dashed var(--dark-border);padding-bottom:14px;margin-bottom:16px">
+            <div style="font-family:Outfit,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--primary-light);text-transform:uppercase">${esc(getSchoolName())}</div>
+            <div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:800;color:var(--dark-text-primary);margin:4px 0">${esc(worksheet.title)}</div>
+            <div style="font-family:Nunito,sans-serif;font-size:13px;color:var(--dark-text-secondary)">Class: UKG-C &nbsp;·&nbsp; Subject: Written Test &nbsp;·&nbsp; Sheet: ${sheetNames[sheetType] || sheetType}</div>
+          </div>
+
+          <!-- Student Name & Date Row -->
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+            <div style="flex:1;min-width:200px">
+              <label style="font-size:12px;font-weight:700;color:var(--dark-text-secondary);display:block;margin-bottom:4px">Student Name</label>
+              <input class="builder-input" id="tuition-name-input" placeholder="Enter student name..." style="background:var(--dark-surface-2)">
+            </div>
+            <div style="width:180px">
+              <label style="font-size:12px;font-weight:700;color:var(--dark-text-secondary);display:block;margin-bottom:4px">Date</label>
+              <input class="builder-input" id="tuition-date-input" type="date" style="background:var(--dark-surface-2)" value="${new Date().toISOString().split('T')[0]}">
+            </div>
+          </div>
+
+          <!-- Instruction Banner -->
+          <div style="background:var(--dark-surface-2);border-radius:12px;padding:14px 18px;margin-bottom:16px;border-left:5px solid var(--accent)">
+            ${allQuestionsHtml}
+            ${comments ? `<div style="font-family:Nunito,sans-serif;font-size:13px;color:var(--dark-text-secondary);font-style:italic;margin-top:6px">💡 Note: ${esc(comments)}</div>` : ''}
+          </div>
+
+          <!-- Interactive Handwriting Canvas (15 Rows) -->
+          <div class="tuition-canvas-container" style="position:relative;width:100%;height:750px;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.4)">
+            <canvas id="tuition-bg-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1"></canvas>
+            <canvas id="tuition-draw-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;touch-action:none;cursor:crosshair"></canvas>
+          </div>
+
+          <!-- Drawing Toolbar Controls -->
+          <div class="tuition-toolbar" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;background:var(--dark-surface-2);padding:12px 16px;border-radius:12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:13px;font-weight:700;color:var(--dark-text-secondary)">Color:</span>
+              ${['#2D2D3A','#2B7FFF','#E53935','#22C55E','#8B5CF6'].map((c, i) => `
+                <button class="color-swatch${i===0?' active':''}" onclick="setTuitionPenColor('${c}')" style="background:${c};width:28px;height:28px;border-radius:50%;border:2px solid white;cursor:pointer" id="tpc-${i}"></button>
+              `).join('')}
+            </div>
+
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="stroke-btn active" onclick="setTuitionPenWidth(2,'thin')" id="tpw-thin">Thin</button>
+              <button class="stroke-btn" onclick="setTuitionPenWidth(4,'med')" id="tpw-med">Med</button>
+              <button class="stroke-btn" onclick="setTuitionPenWidth(8,'thick')" id="tpw-thick">Thick</button>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="eraser-btn" onclick="toggleTuitionEraser()" id="btn-t-eraser">⬜ Eraser</button>
+              <button class="btn btn-dark btn-sm" onclick="undoTuitionStroke()" id="btn-t-undo">↩ Undo</button>
+              <button class="btn btn-dark btn-sm" onclick="clearTuitionCanvas()" id="btn-t-clear">🗑 Clear</button>
+              <button class="btn btn-primary" onclick="submitTuitionWorksheet()" id="btn-t-submit">✓ Submit Test</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `);
+
+  setTimeout(() => initTuitionCanvas(sheetType, sampleText), 50);
+}
+
+function initTuitionCanvas(sheetType, sampleText) {
+  const bgCanvas = document.getElementById('tuition-bg-canvas');
+  const drawCanvas = document.getElementById('tuition-draw-canvas');
+  if (!bgCanvas || !drawCanvas) return;
+
+  const container = drawCanvas.parentElement;
+  const W = container.clientWidth || 800;
+  const H = container.clientHeight || 520;
+
+  bgCanvas.width = W; bgCanvas.height = H;
+  drawCanvas.width = W; drawCanvas.height = H;
+
+  const bgCtx = bgCanvas.getContext('2d');
+  drawTuitionNotebookLines(bgCtx, W, H, sheetType, sampleText);
+
+  _tuitionStrokes = [];
+  _currentStroke = null;
+
+  const ctx = drawCanvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  let drawing = false;
+
+  const getPointerPos = (e) => {
+    const rect = drawCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const startDraw = (e) => {
+    drawing = true;
+    const pos = getPointerPos(e);
+    _currentStroke = {
+      color: _tuitionEraser ? '#FEFCF7' : _tuitionPenColor,
+      width: _tuitionEraser ? 20 : _tuitionPenWidth,
+      isEraser: _tuitionEraser,
+      points: [pos]
+    };
+    ctx.strokeStyle = _currentStroke.color;
+    ctx.lineWidth = _currentStroke.width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  };
+
+  const moveDraw = (e) => {
+    if (!drawing || !_currentStroke) return;
+    const pos = getPointerPos(e);
+    _currentStroke.points.push(pos);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  };
+
+  const stopDraw = () => {
+    if (drawing && _currentStroke && _currentStroke.points.length > 0) {
+      _tuitionStrokes.push(_currentStroke);
+    }
+    drawing = false;
+    _currentStroke = null;
+  };
+
+  drawCanvas.onpointerdown = startDraw;
+  drawCanvas.onpointermove = moveDraw;
+  drawCanvas.onpointerup = stopDraw;
+  drawCanvas.onpointercancel = stopDraw;
+}
+
+function setTuitionPenColor(color) {
+  _tuitionPenColor = color;
+  _tuitionEraser = false;
+  const eb = document.getElementById('btn-t-eraser'); if (eb) eb.classList.remove('active');
+  document.querySelectorAll('.color-swatch').forEach((el) => {
+    el.classList.toggle('active', el.style.background === color || el.getAttribute('style')?.includes(color));
+  });
+}
+
+function setTuitionPenWidth(w, id) {
+  _tuitionPenWidth = w;
+  document.querySelectorAll('.stroke-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`tpw-${id}`); if (btn) btn.classList.add('active');
+}
+
+function toggleTuitionEraser() {
+  _tuitionEraser = !_tuitionEraser;
+  const eb = document.getElementById('btn-t-eraser');
+  if (eb) eb.classList.toggle('active', _tuitionEraser);
+}
+
+function undoTuitionStroke() {
+  if (_tuitionStrokes.length > 0) {
+    _tuitionStrokes.pop();
+    redrawTuitionStrokes();
+  }
+}
+
+function clearTuitionCanvas() {
+  _tuitionStrokes = [];
+  redrawTuitionStrokes();
+}
+
+function redrawTuitionStrokes() {
+  const drawCanvas = document.getElementById('tuition-draw-canvas');
+  if (!drawCanvas) return;
+  const ctx = drawCanvas.getContext('2d');
+  ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+
+  _tuitionStrokes.forEach(stroke => {
+    if (!stroke.points || stroke.points.length < 1) return;
+    ctx.strokeStyle = stroke.color;
+    ctx.lineWidth = stroke.width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+    for (let i = 1; i < stroke.points.length; i++) {
+      ctx.lineTo(stroke.points[i].i || stroke.points[i].x, stroke.points[i].y);
+    }
+    ctx.stroke();
+  });
+}
+
+function submitTuitionWorksheet() {
+  if (!state.player) return;
+  const { worksheetId } = state.player;
+  saveProgress(worksheetId, 100, 3);
+  if (typeof spawnConfetti === 'function') spawnConfetti();
+  showToast('🎉 Written Test Submitted Successfully!', 'success');
+
+  setTimeout(() => {
+    navigate('/child/results');
+  }, 1200);
+}
+
 function renderCurrentQuestion() {
   const { worksheet, questionIndex, total } = state.player;
+  const question = (worksheet.questions && worksheet.questions[questionIndex]) || { type: 'TUITION_CANVAS', text: worksheet.instruction || worksheet.title };
+
+  if (worksheet.isTuitionSheet || worksheet.subject === 'tuition' || (question && question.type === 'TUITION_CANVAS')) {
+    return renderTuitionSheetPlayer(worksheet, question);
+  }
+
   const sub = SUBJECTS[worksheet.subject] || {};
-  const question = worksheet.questions[questionIndex];
   const pct = Math.round((questionIndex / total) * 100);
   const isHindi = worksheet.subject === 'hindi';
 
   let qBody = '';
-  const NEW_TYPES = ['MATCH','CIRCLE_FIND','DRAG_SLOT','ARRANGE','SEQUENCE_NEXT','SEQUENCE_PREV','UNSCRAMBLE','WORD_BUILD','WORD_FIRST_LETTER','WORD_LAST_LETTER','AUDIO_CLIP','VOWEL_SORT','TEXT_HIGHLIGHT','PICTURE_WRITE','AUDIO_WRITE','GROUPS_OF_TENS'];
+  const NEW_TYPES = ['MATCH','MATCH_IMAGE','CIRCLE_FIND','DRAG_SLOT','ARRANGE','SEQUENCE_NEXT','SEQUENCE_PREV','UNSCRAMBLE','WORD_BUILD','WORD_FIRST_LETTER','WORD_LAST_LETTER','AUDIO_CLIP','VOWEL_SORT','TEXT_HIGHLIGHT','PICTURE_WRITE','AUDIO_WRITE','NUMBER_WRITE','GROUPS_OF_TENS','READ_AND_ANSWER'];
   if (question.type === 'MCQ')                   qBody = renderMCQ(question);
   else if (question.type === 'TRUE_FALSE')        qBody = renderTrueFalse(question);
   else if (question.type === 'FILL_BLANK')        qBody = renderFillBlank(question);
   else if (question.type === 'CATEGORIZE')        qBody = renderCategorize(question);
-  else if (question.type === 'MATCH')             qBody = renderMatch(question);
+  else if (question.type === 'MATCH' || question.type === 'MATCH_IMAGE') qBody = renderMatch(question);
   else if (question.type === 'CIRCLE_FIND')       qBody = renderCircleFind(question);
   else if (question.type === 'DRAG_SLOT')         qBody = renderDragSlot(question);
   else if (question.type === 'ARRANGE')           qBody = renderArrange(question);
@@ -270,14 +584,16 @@ function renderCurrentQuestion() {
   else if (question.type === 'TEXT_HIGHLIGHT')    qBody = renderTextHighlight(question);
   else if (question.type === 'PICTURE_WRITE')     qBody = renderPictureWrite(question);
   else if (question.type === 'AUDIO_WRITE')       qBody = renderAudioWrite(question);
+  else if (question.type === 'NUMBER_WRITE')      qBody = renderNumberWrite(question);
   else if (question.type === 'GROUPS_OF_TENS')    qBody = renderGroupsOfTens(question);
+  else if (question.type === 'READ_AND_ANSWER')   qBody = renderReadAndAnswer(question);
   else qBody = renderMCQ(question);
 
   // New types: button starts disabled
   const isNewType = NEW_TYPES.includes(question.type);
 
-  // AUDIO_CLIP text mode + PICTURE_WRITE + AUDIO_WRITE: check always enabled
-  const alwaysEnabled = ['PICTURE_WRITE','AUDIO_WRITE','TEXT_HIGHLIGHT','GROUPS_OF_TENS'].includes(question.type)
+  // Input-based questions: check always enabled
+  const alwaysEnabled = ['PICTURE_WRITE','AUDIO_WRITE','TEXT_HIGHLIGHT','NUMBER_WRITE','GROUPS_OF_TENS','READ_AND_ANSWER'].includes(question.type)
     || (question.type === 'AUDIO_CLIP' && question.answerType !== 'mcq');
   const checkDisabled = alwaysEnabled ? false
     : isNewType ? true : (question.type !== 'FILL_BLANK' && state.player.selectedOption === null);
@@ -456,6 +772,59 @@ function selectTF(el, value) {
   if (btn) btn.disabled = false;
 }
 
+// Helper to get formatted correct answer for all question types
+function getCorrectAnswerDisplay(q) {
+  if (!q) return '';
+  const type = q.type;
+
+  if (type === 'CIRCLE_FIND') {
+    const items = q.correctItems || q.answer || [];
+    return Array.isArray(items) ? items.join(', ') : String(items);
+  }
+  if (type === 'MATCH' || type === 'MATCH_IMAGE') {
+    if (Array.isArray(q.pairs)) {
+      return q.pairs.map(p => `${p.left} → ${p.right}`).join(', ');
+    }
+  }
+  if (type === 'DRAG_SLOT') {
+    if (Array.isArray(q.slots)) {
+      return q.slots.map(s => s.answer).join(', ');
+    }
+  }
+  if (type === 'ARRANGE') {
+    const order = q.correctOrder || q.items || q.answer || [];
+    return Array.isArray(order) ? order.join(' → ') : String(order);
+  }
+  if (type === 'SEQUENCE_NEXT' || type === 'SEQUENCE_PREV') {
+    const ans = q.answers || q.answer || [];
+    return Array.isArray(ans) ? ans.join(', ') : String(ans);
+  }
+  if (type === 'TEXT_HIGHLIGHT') {
+    const words = q.correctWords || q.answer || [];
+    return Array.isArray(words) ? words.join(', ') : String(words);
+  }
+  if (type === 'VOWEL_SORT') {
+    if (q.mode === 'single') {
+      const words = q.correctWords || q.words || [];
+      return Array.isArray(words) ? words.join(', ') : String(words);
+    } else if (q.binMap) {
+      return Object.entries(q.binMap).map(([w,b]) => `${w}: ${b}`).join(', ');
+    }
+  }
+  if (type === 'PICTURE_WRITE') {
+    const exp = q.expectedAnswers || [q.expectedAnswer || q.answer];
+    return Array.isArray(exp) ? exp.filter(Boolean).join(' / ') : String(exp || '');
+  }
+  if (type === 'AUDIO_WRITE') {
+    return String(q.expectedAnswer || q.answer || '');
+  }
+  if (type === 'TRUE_FALSE') {
+    return q.answer === true ? 'True' : 'False';
+  }
+
+  return String(q.answer !== undefined ? q.answer : (q.expectedAnswer || ''));
+}
+
 // ── Check Answer ──────────────────────────────────────────────
 function checkAnswer() {
   if (state.player.checked) { nextQuestion(); return; }
@@ -485,7 +854,7 @@ function checkAnswer() {
   } else if (question.type === 'CATEGORIZE') {
     const cs = window._catState;
     isCorrect = cs ? cs.items.every((item, i) => cs.placements[i] === item.correctCategory) : false;
-  } else if (['MATCH','CIRCLE_FIND','DRAG_SLOT','ARRANGE','SEQUENCE_NEXT','SEQUENCE_PREV','UNSCRAMBLE','WORD_BUILD','WORD_FIRST_LETTER','WORD_LAST_LETTER'].includes(question.type)) {
+  } else if (['MATCH','MATCH_IMAGE','CIRCLE_FIND','DRAG_SLOT','ARRANGE','SEQUENCE_NEXT','SEQUENCE_PREV','UNSCRAMBLE','WORD_BUILD','WORD_FIRST_LETTER','WORD_LAST_LETTER'].includes(question.type)) {
     const result = evaluateNewType(question);
     isCorrect   = result.isCorrect;
     givenAnswer = result.givenAnswer;
@@ -549,10 +918,20 @@ function checkAnswer() {
     givenAnswer = inp ? inp.value.trim() : '';
     isCorrect = givenAnswer.toLowerCase() === String(question.expectedAnswer || question.answer || '').toLowerCase();
     if (inp) { inp.disabled = true; inp.className = `fill-blank-input ${isCorrect?'correct':'wrong'}`; }
+  } else if (question.type === 'NUMBER_WRITE') {
+    const inp = document.getElementById('numw-input');
+    givenAnswer = inp ? inp.value.trim() : '';
+    isCorrect = givenAnswer.toLowerCase() === String(question.answer || '').toLowerCase();
+    if (inp) { inp.disabled = true; inp.className = `fill-blank-input ${isCorrect?'correct':'wrong'}`; }
   } else if (question.type === 'GROUPS_OF_TENS') {
     const inp = document.getElementById('got-input');
     givenAnswer = inp ? inp.value.trim() : '';
     isCorrect = givenAnswer === String(question.answer);
+    if (inp) { inp.disabled = true; inp.className = `fill-blank-input ${isCorrect?'correct':'wrong'}`; }
+  } else if (question.type === 'READ_AND_ANSWER') {
+    const inp = document.getElementById('raa-input');
+    givenAnswer = inp ? inp.value.trim() : (givenAnswer || '');
+    isCorrect = givenAnswer.toLowerCase() === String(question.answer || '').toLowerCase();
     if (inp) { inp.disabled = true; inp.className = `fill-blank-input ${isCorrect?'correct':'wrong'}`; }
   } else {
     // MCQ
@@ -577,7 +956,7 @@ function checkAnswer() {
         <span class="feedback-icon">${isCorrect ? '🎉' : '💡'}</span>
         ${isCorrect
           ? `<span>Excellent! That's correct!</span>`
-          : `<span>Correct answer: <strong>${esc(String(question.answer))}</strong></span>`}
+          : `<span>Correct answer: <strong>${esc(getCorrectAnswerDisplay(question))}</strong></span>`}
       </div>`;
   }
 
@@ -608,7 +987,6 @@ function endWorksheet() {
 function confirmQuit() {
   if (confirm('Quit this worksheet? Your progress will not be saved.')) navigate('/child');
 }
-
 // ══════════════════════════════════════════════════════════════
 // SCREEN: RESULTS
 // ══════════════════════════════════════════════════════════════
@@ -678,6 +1056,7 @@ function spawnConfetti() {
 // ══════════════════════════════════════════════════════════════
 const ENG_LETTERS   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const HINDI_LETTERS = ['अ','आ','इ','ई','उ','ऊ','ए','ऐ','ओ','औ','क','ख','ग','घ','ङ','च','छ','ज','झ','ञ','ट','ठ','ड','ढ','ण','त','थ','द','ध','न','प','फ','ब','भ','म','य','र','ल','व','श','ष','स','ह'];
+const MATH_LETTERS  = ['0','1','2','3','4','5','6','7','8','9'];
 
 // ── Tracing state ─────────────────────────────────────────────
 let _tLang      = 'english';
@@ -702,7 +1081,7 @@ let _isRecording   = false;
 const SHEETS = [
   { id:'4-line', label:'📄 4-Line', title:'4-Line (English)' },
   { id:'3-line', label:'📄 3-Line', title:'3-Line (Hindi)' },
-  { id:'2-line', label:'📄 2-Line', title:'2-Line (Mātrā)' },
+  { id:'2-line', label:'📄 2-Line', title:'2-Line (Hindi)' },
   { id:'grid',   label:'🔲 Grid',   title:'Grid (Maths)' },
   { id:'blank',  label:'🎨 Blank',  title:'Blank Canvas' },
 ];
@@ -710,12 +1089,21 @@ const DRAW_COLORS = ['#6C63FF','#FF5C5C','#43D9A2','#FF8C42','#FFD93D','#2D2D3A'
 
 // ── Render tracing practice screen ───────────────────────────
 function renderTracingPractice(lang) {
-  _tLang    = lang;
-  _tLetters = lang === 'hindi' ? HINDI_LETTERS : ENG_LETTERS;
+  _tLang = lang || 'english';
+  if (_tLang === 'hindi') {
+    _tLetters = HINDI_LETTERS;
+    _tSheet   = '3-line';
+  } else if (_tLang === 'maths') {
+    _tLetters = MATH_LETTERS;
+    _tSheet   = 'grid';
+  } else {
+    _tLetters = ENG_LETTERS;
+    _tSheet   = '4-line';
+  }
   _tIdx     = 0;
   _tTotal   = 0; _tInBound = 0;
-  const fontFam = lang === 'hindi' ? 'Hind' : 'Nunito';
-  const fs      = lang === 'hindi' ? '16' : '19';
+  const fontFam = _tLang === 'hindi' ? 'Hind' : 'Nunito';
+  const fs      = _tLang === 'hindi' ? '16' : '19';
 
   const letterBtns = _tLetters.map((l, i) => `
     <button class="letter-tile-btn" onclick="loadLetter(${i})" id="lb-${i}"
@@ -729,13 +1117,15 @@ function renderTracingPractice(lang) {
     <div class="color-swatch ${c === _tColor ? 'active' : ''}"
       style="background:${c}" onclick="setDrawColor('${c}')" id="sw-${i}" title="${c}"></div>`).join('');
 
+  const pageTitle = _tLang === 'hindi' ? 'Hindi Swar & Vyanjan Tracing' : _tLang === 'maths' ? 'Maths Number & Digit Tracing' : 'English Letter Tracing';
+
   setApp(`
     <div class="tracing-screen screen">
 
       <!-- Top bar -->
       <div class="tracing-top-bar">
         <button class="back-btn" onclick="navigate('/child')" id="btn-back-trace">◀</button>
-        <h1>✏️ Letter Tracing — ${lang === 'hindi' ? 'Hindi' : 'English'}</h1>
+        <h1>✏️ ${pageTitle}</h1>
       </div>
 
       <!-- Controls panel -->
@@ -755,15 +1145,15 @@ function renderTracingPractice(lang) {
 
       <!-- Letter grid -->
       <div class="letter-grid-wrap">
-        <label>Tap a Letter to Trace</label>
+        <label>Tap a Character to Trace</label>
         <div class="letter-tile-grid">${letterBtns}</div>
       </div>
 
-      <!-- Canvas area (hidden until letter selected) -->
-      <div id="trace-canvas-wrap" class="trace-canvas-wrap" style="display:none">
+      <!-- Canvas area -->
+      <div id="trace-canvas-wrap" class="trace-canvas-wrap">
         <div class="canvas-top-row">
           <div class="canvas-left-row">
-            <div class="canvas-letter-label" id="trace-label"></div>
+            <div class="canvas-letter-label" id="trace-label">Tracing: "${(_tLetters && _tLetters[0]) ? _tLetters[0] : 'A'}"</div>
             <div class="recording-indicator" id="recording-indicator">
               <div class="rec-dot"></div> REC
             </div>
@@ -779,7 +1169,7 @@ function renderTracingPractice(lang) {
         <div class="canvas-box" id="canvas-box">
           <canvas id="trace-canvas" style="height:260px"></canvas>
         </div>
-        <div class="canvas-hint" id="canvas-hint">✏️ Use your finger or stylus to trace the dotted letter</div>
+        <div class="canvas-hint" id="canvas-hint">✏️ Use your finger or stylus to trace inside the guide</div>
 
         <!-- Blank canvas tools (only shown in blank mode) -->
         <div id="blank-tools" style="display:none">
@@ -810,6 +1200,8 @@ function renderTracingPractice(lang) {
       <div class="stylus-toast" id="stylus-toast">✏️ Stylus detected! Switched to Pen mode</div>
     </div>
   `);
+
+  loadLetter(0);
 }
 
 function setSheetType(type) {
@@ -817,14 +1209,14 @@ function setSheetType(type) {
   document.querySelectorAll('.sheet-pill').forEach(b => b.classList.toggle('active', b.id === `sp-${type}`));
   const blank = document.getElementById('blank-tools');
   if (blank) blank.style.display = type === 'blank' ? 'block' : 'none';
-  if (_tLetters[_tIdx]) initTraceCanvas();
+  initTraceCanvas();
 }
 
 function setInputMode(mode) {
   _tMode = mode;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.id === `mode-${mode}`));
   _tStrokeW = mode === 'pen' ? 3 : 5;
-  if (_tLetters[_tIdx]) initTraceCanvas();
+  initTraceCanvas();
 }
 
 function setDrawColor(color) {
@@ -847,15 +1239,14 @@ function toggleEraser() {
 }
 
 function loadLetter(idx) {
-  _tIdx   = idx;
+  _tIdx   = Math.max(0, Math.min((_tLetters ? _tLetters.length - 1 : 0), idx));
   _tTotal = 0; _tInBound = 0;
+  const letter = (_tLetters && _tLetters[_tIdx]) ? _tLetters[_tIdx] : (_tLang === 'hindi' ? 'अ' : _tLang === 'maths' ? '1' : 'A');
   const wrap = document.getElementById('trace-canvas-wrap');
   if (wrap) wrap.style.display = 'block';
   const label = document.getElementById('trace-label');
-  if (label) label.textContent = `Tracing: "${_tLetters[_tIdx]}"`;
-  // Highlight selected letter tile
-  document.querySelectorAll('.letter-tile-btn').forEach((b, i) => b.classList.toggle('selected', i === idx));
-  // Blank canvas tools
+  if (label) label.textContent = `Tracing: "${letter}"`;
+  document.querySelectorAll('.letter-tile-btn').forEach((b, i) => b.classList.toggle('selected', i === _tIdx));
   const blank = document.getElementById('blank-tools');
   if (blank) blank.style.display = _tSheet === 'blank' ? 'block' : 'none';
   initTraceCanvas();
@@ -864,8 +1255,9 @@ function loadLetter(idx) {
 function nextTraceLetter() {
   _tIdx   = (_tIdx + 1) % _tLetters.length;
   _tTotal = 0; _tInBound = 0;
+  const letter = _tLetters[_tIdx] || 'A';
   const label = document.getElementById('trace-label');
-  if (label) label.textContent = `Tracing: "${_tLetters[_tIdx]}"`;
+  if (label) label.textContent = `Tracing: "${letter}"`;
   document.querySelectorAll('.letter-tile-btn').forEach((b, i) => b.classList.toggle('selected', i === _tIdx));
   initTraceCanvas();
 }
@@ -876,149 +1268,294 @@ function drawSheetLines(ctx, W, H) {
   ctx.fillStyle = '#FEFCF7';
   ctx.fillRect(0, 0, W, H);
 
+  // Vertical margin line (like standard Indian school notebooks)
+  const marginX = 40;
+  if (_tSheet !== 'blank') {
+    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
+  }
+
   if (_tSheet === '4-line') {
-    // headline 20%, waistline 50%, baseline 75%, footline 95%
+    // 4-line English notebook: Red headline, Blue dashed waistline, Blue baseline, Red footline
+    const y1 = H * 0.18, y2 = H * 0.42, y3 = H * 0.66, y4 = H * 0.90;
     const lines = [
-      { y: H * 0.20, solid: true,  color: '#6CB4F5', width: 1.5 },
-      { y: H * 0.50, solid: false, color: '#6CB4F5', width: 1 },
-      { y: H * 0.75, solid: true,  color: '#6CB4F5', width: 1.5 },
-      { y: H * 0.95, solid: false, color: '#6CB4F5', width: 1 },
+      { y: y1, solid: true,  color: '#FF4B4B', width: 2 },   // Top Headline (Red)
+      { y: y2, solid: false, color: '#2B7FFF', width: 1.5 }, // Mid Waistline (Blue dash)
+      { y: y3, solid: true,  color: '#2B7FFF', width: 2 },   // Baseline (Blue)
+      { y: y4, solid: true,  color: '#FF4B4B', width: 2 },   // Footline (Red)
     ];
     lines.forEach(l => {
       ctx.strokeStyle = l.color; ctx.lineWidth = l.width;
-      ctx.setLineDash(l.solid ? [] : [5, 4]);
+      ctx.setLineDash(l.solid ? [] : [6, 4]);
       ctx.beginPath(); ctx.moveTo(0, l.y); ctx.lineTo(W, l.y); ctx.stroke();
     });
     ctx.setLineDash([]);
   } else if (_tSheet === '3-line') {
-    // headline (shirorékha) 15%, middle guide dashed 55%, base 80%
+    // 3-line Hindi notebook: Red top Shiro-rekha line, Blue dashed midline, Red baseline
+    const y1 = H * 0.18, y2 = H * 0.45, y3 = H * 0.72;
     const lines = [
-      { y: H * 0.15, solid: true,  color: '#D32F2F', width: 2 },   // शिरोरेखा — red
-      { y: H * 0.55, solid: false, color: '#BDBDBD', width: 1 },   // middle guide — gray dash
-      { y: H * 0.80, solid: true,  color: '#D32F2F', width: 1.5 }, // baseline — red
+      { y: y1, solid: true,  color: '#E53935', width: 2.5 }, // शिरोरेखा — Red
+      { y: y2, solid: false, color: '#2B7FFF', width: 1.5 }, // Mid guide — Blue dash
+      { y: y3, solid: true,  color: '#E53935', width: 2 },   // Baseline — Red
     ];
     lines.forEach(l => {
       ctx.strokeStyle = l.color; ctx.lineWidth = l.width;
-      ctx.setLineDash(l.solid ? [] : [4, 5]);
+      ctx.setLineDash(l.solid ? [] : [5, 5]);
       ctx.beginPath(); ctx.moveTo(0, l.y); ctx.lineTo(W, l.y); ctx.stroke();
     });
     ctx.setLineDash([]);
   } else if (_tSheet === '2-line') {
-    // Two red solid lines
-    [H * 0.25, H * 0.78].forEach(y => {
-      ctx.strokeStyle = '#D32F2F'; ctx.lineWidth = 1.5;
+    // Two Red solid lines
+    [H * 0.22, H * 0.78].forEach(y => {
+      ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2;
       ctx.setLineDash([]);
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     });
   } else if (_tSheet === 'grid') {
-    const cell = 40;
-    ctx.strokeStyle = '#B0BEC5'; ctx.lineWidth = 0.75; ctx.setLineDash([]);
+    // Maths Box notebook: Square grid boxes with central math target box
+    const cell = 60;
+    ctx.strokeStyle = '#B0BEC5'; ctx.lineWidth = 1; ctx.setLineDash([]);
     for (let x = 0; x <= W; x += cell) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
     }
     for (let y = 0; y <= H; y += cell) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
+    // Highlight central math box
+    const boxW = 100, boxH = 120;
+    const bx = W / 2 - boxW / 2, by = H / 2 - boxH / 2;
+    ctx.strokeStyle = '#FF8C42'; ctx.lineWidth = 2.5;
+    ctx.strokeRect(bx, by, boxW, boxH);
   } else {
-    // blank — clean white, already filled
-    ctx.fillStyle = 'white';
+    // Blank
+    ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, W, H);
+  }
+}
+
+// ── Draw Full-Page Tuition Notebook Lines (Exact 15 Rows) ──────────────────────
+function drawTuitionNotebookLines(ctx, W, H, sheetType, sampleText) {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#FEFCF7';
+  ctx.fillRect(0, 0, W, H);
+
+  const totalRows = 15;
+  const startY = 18;
+
+  if (sheetType === '4-line') {
+    // Classic English 4-Line Notebook Pattern (Red Headline, Blue Dash Midline, Blue Baseline, Red Footline, Red Margin)
+    const marginX = 45;
+    ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(marginX, 0); ctx.lineTo(marginX, H); ctx.stroke();
+
+    const availableH = H - startY - 18;
+    const gap = Math.max(8, Math.floor(availableH / (totalRows * 5)));
+    const bandH = Math.max(34, Math.floor((availableH - (totalRows - 1) * gap) / totalRows));
+
+    for (let r = 0; r < totalRows; r++) {
+      const y = startY + r * (bandH + gap);
+      const y1 = y;
+      const y2 = y + bandH * 0.33;
+      const y3 = y + bandH * 0.67;
+      const y4 = y + bandH;
+
+      // Line 1: Top Headline (Red)
+      ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y1); ctx.lineTo(W - 12, y1); ctx.stroke();
+
+      // Line 2: Waistline / Midline (Blue Dash)
+      ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y2); ctx.lineTo(W - 12, y2); ctx.stroke();
+
+      // Line 3: Baseline (Blue Solid)
+      ctx.strokeStyle = '#2B7FFF'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y3); ctx.lineTo(W - 12, y3); ctx.stroke();
+
+      // Line 4: Footline (Red)
+      ctx.strokeStyle = '#FF4B4B'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(marginX + 6, y4); ctx.lineTo(W - 12, y4); ctx.stroke();
+    }
+  } else if (sheetType === '3-line') {
+    // 3-Line Notebook Pattern (Pink Rectangle Boxes with 3 Inner Light Blue Parallel Lines & taller height)
+    const availableH = H - startY - 18;
+    const gap = 4;
+    const bandH = Math.max(44, Math.floor((availableH - (totalRows - 1) * gap) / totalRows));
+
+    const leftX = 14;
+    const rightX = W - 14;
+
+    for (let r = 0; r < totalRows; r++) {
+      const y = startY + r * (bandH + gap);
+
+      // 1. Draw Pink / Rose Rectangular Outer Box
+      ctx.strokeStyle = '#EC407A'; ctx.lineWidth = 2; ctx.setLineDash([]);
+      ctx.strokeRect(leftX, y, rightX - leftX, bandH);
+
+      // 2. Draw 3 Inner Light Blue Parallel Lines inside the Pink Box
+      ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.2; ctx.setLineDash([]);
+
+      const y1 = y + bandH * 0.22;
+      const y2 = y + bandH * 0.50;
+      const y3 = y + bandH * 0.78;
+
+      ctx.beginPath(); ctx.moveTo(leftX, y1); ctx.lineTo(rightX, y1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(leftX, y2); ctx.lineTo(rightX, y2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(leftX, y3); ctx.lineTo(rightX, y3); ctx.stroke();
+    }
+  } else if (sheetType === '2-line') {
+    // 2-Line Notebook Pattern (Double Equal Line Gap Size - 25 Rows)
+    const rows2Line = 25;
+    const availableH = H - startY - 18;
+    const step = availableH / rows2Line;
+
+    const leftX = 14;
+    const rightX = W - 14;
+
+    ctx.strokeStyle = '#546E7A'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+
+    for (let r = 0; r <= rows2Line; r++) {
+      const y = startY + r * step;
+      ctx.beginPath(); ctx.moveTo(leftX, y); ctx.lineTo(rightX, y); ctx.stroke();
+    }
+  } else if (sheetType === '1-line') {
+    // Single Line Notebook Pattern (15 Rows)
+    for (let r = 0; r < totalRows; r++) {
+      const y = startY + r * (bandH + gap) + bandH;
+      ctx.strokeStyle = '#29B6F6'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(leftX, y); ctx.lineTo(rightX, y); ctx.stroke();
+    }
+  } else if (sheetType === 'grid') {
+    // Maths Square Grid Pattern (15 Box Rows)
+    const cell = Math.floor(H / totalRows);
+    ctx.strokeStyle = '#CFD8DC'; ctx.lineWidth = 1; ctx.setLineDash([]);
+    for (let x = 0; x <= W; x += cell) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y <= H; y += cell) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cell * 2, 0); ctx.lineTo(cell * 2, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cell * 2 + 4, 0); ctx.lineTo(cell * 2 + 4, H); ctx.stroke();
+  } else {
+    // Blank Canvas
+    ctx.strokeStyle = '#333333'; ctx.lineWidth = 2; ctx.setLineDash([]);
   }
 }
 
 // ── Draw letter guide at correct position for sheet ───────────
 function drawLetterGuide(ctx, letter, W, H) {
-  if (_tSheet === 'blank') return; // no guide on blank canvas
+  if (_tSheet === 'blank') return;
   const isHindi = _tLang === 'hindi';
   const fontFam = isHindi ? 'Hind' : 'Nunito';
 
-  // Determine vertical center for each sheet type
-  let cy;
-  if (_tSheet === '4-line')      cy = H * 0.475; // between waistline and baseline
-  else if (_tSheet === '3-line') cy = H * 0.475; // between shirorékha and base
-  else if (_tSheet === '2-line') cy = H * 0.52;
-  else if (_tSheet === 'grid')   cy = H * 0.5;
-  else                           cy = H * 0.5;
+  let yBase, fs;
 
-  // Font size scales to fit writing zone height
-  let zoneH;
-  if (_tSheet === '4-line')      zoneH = H * 0.55;
-  else if (_tSheet === '3-line') zoneH = H * 0.65;
-  else if (_tSheet === '2-line') zoneH = H * 0.53;
-  else if (_tSheet === 'grid')   zoneH = Math.min(H * 0.6, 80);
-  else                           zoneH = H * 0.7;
-
-  const fs = Math.min(W * 0.45, zoneH * 1.1, 160);
+  if (_tSheet === '4-line') {
+    // English 4-Line Notebook: Capital letters sit ON Line 3 (Blue baseline) and touch Line 1 (Red headline)
+    const y1 = H * 0.18; // Red Top Line
+    const y3 = H * 0.66; // Blue Baseline
+    const bandH = y3 - y1;
+    yBase = y3;
+    fs = Math.min(bandH / 0.72, W * 0.45);
+  } else if (_tSheet === '3-line') {
+    // Hindi 3-Line Notebook: Hindi letters sit between Top Shiro-rekha line and Baseline
+    const y1 = H * 0.18;
+    const y3 = H * 0.72;
+    const bandH = y3 - y1;
+    yBase = y3;
+    fs = Math.min(bandH / 0.75, W * 0.45);
+  } else if (_tSheet === '2-line') {
+    // Hindi 2-Line Notebook: Sits between two red lines
+    const y1 = H * 0.22;
+    const y2 = H * 0.78;
+    const bandH = y2 - y1;
+    yBase = y2;
+    fs = Math.min(bandH / 0.72, W * 0.45);
+  } else if (_tSheet === 'grid') {
+    // Maths Grid Notebook: Fits inside central Math box
+    const boxH = 120;
+    yBase = H / 2 + boxH / 2 - 12;
+    fs = Math.min(boxH * 0.78, W * 0.35);
+  } else {
+    yBase = H * 0.70;
+    fs = Math.min(H * 0.5, W * 0.45);
+  }
 
   ctx.font = `bold ${fs}px '${fontFam}', sans-serif`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
 
   // Dotted guide stroke
   ctx.save();
-  ctx.setLineDash([5, 7]);
-  ctx.strokeStyle = '#C4B5FD'; ctx.lineWidth = 5;
-  ctx.strokeText(letter, W / 2, cy);
+  ctx.setLineDash([6, 6]);
+  ctx.strokeStyle = '#6C63FF'; ctx.lineWidth = 5;
+  ctx.strokeText(letter, W / 2, yBase);
   ctx.restore();
 
   // Faint fill
-  ctx.fillStyle = 'rgba(196,181,253,0.2)';
-  ctx.fillText(letter, W / 2, cy);
+  ctx.fillStyle = 'rgba(108, 99, 255, 0.15)';
+  ctx.fillText(letter, W / 2, yBase);
 
   // Start-here hint
   ctx.fillStyle = '#FF8C42';
-  ctx.font = 'bold 12px Nunito, sans-serif';
+  ctx.font = 'bold 13px Nunito, sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('▶ Start here', 10, 18);
+  ctx.textBaseline = 'top';
+  ctx.fillText('▶ Start here', 12, 10);
 }
 
 // ── Build BFS tolerance map ───────────────────────────────────
-// Returns null for blank canvas (no boundary checking)
 function buildToleranceMap(letter, W, H) {
   if (_tSheet === 'blank') { _tTolMap = null; return; }
 
-  const isHindi  = _tLang === 'hindi';
-  const fontFam  = isHindi ? 'Hind' : 'Nunito';
-  const tolerance = _tMode === 'pen' ? 20 : 28;
+  const isHindi   = _tLang === 'hindi';
+  const fontFam   = isHindi ? 'Hind' : 'Nunito';
+  const tolerance = _tMode === 'pen' ? 35 : 45;
 
-  // Offscreen canvas — draw letter solid black, no background
   const oc  = document.createElement('canvas');
   oc.width  = W; oc.height = H;
   const oct = oc.getContext('2d');
 
-  // Determine cy (same logic as drawLetterGuide)
-  let cy;
-  if (_tSheet === '4-line')      cy = H * 0.475;
-  else if (_tSheet === '3-line') cy = H * 0.475;
-  else if (_tSheet === '2-line') cy = H * 0.52;
-  else if (_tSheet === 'grid')   cy = H * 0.5;
-  else                           cy = H * 0.5;
-
-  let zoneH;
-  if (_tSheet === '4-line')      zoneH = H * 0.55;
-  else if (_tSheet === '3-line') zoneH = H * 0.65;
-  else if (_tSheet === '2-line') zoneH = H * 0.53;
-  else if (_tSheet === 'grid')   zoneH = Math.min(H * 0.6, 80);
-  else                           zoneH = H * 0.7;
-
-  const fs = Math.min(W * 0.45, zoneH * 1.1, 160);
+  let yBase, fs;
+  if (_tSheet === '4-line') {
+    const y1 = H * 0.18, y3 = H * 0.66;
+    yBase = y3; fs = Math.min((y3 - y1) / 0.72, W * 0.45);
+  } else if (_tSheet === '3-line') {
+    const y1 = H * 0.18, y3 = H * 0.72;
+    yBase = y3; fs = Math.min((y3 - y1) / 0.75, W * 0.45);
+  } else if (_tSheet === '2-line') {
+    const y1 = H * 0.22, y2 = H * 0.78;
+    yBase = y2; fs = Math.min((y2 - y1) / 0.72, W * 0.45);
+  } else if (_tSheet === 'grid') {
+    const boxH = 120; yBase = H / 2 + boxH / 2 - 12; fs = Math.min(boxH * 0.78, W * 0.35);
+  } else {
+    yBase = H * 0.70; fs = Math.min(H * 0.5, W * 0.45);
+  }
 
   oct.font = `bold ${fs}px '${fontFam}', sans-serif`;
-  oct.textAlign = 'center'; oct.textBaseline = 'middle';
+  oct.textAlign = 'center'; oct.textBaseline = 'alphabetic';
   oct.fillStyle = '#000000';
-  oct.fillText(letter, W / 2, cy);
-  // Stroke too — gives extra thickness for tracing zone
+  oct.fillText(letter, W / 2, yBase);
   oct.strokeStyle = '#000000'; oct.lineWidth = tolerance * 0.4; oct.setLineDash([]);
-  oct.strokeText(letter, W / 2, cy);
+  oct.strokeText(letter, W / 2, yBase);
 
   const imgData = oct.getImageData(0, 0, W, H).data;
 
-  // Mark letter pixels
+  let count = 0;
   const src = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) {
-    if (imgData[i * 4 + 3] > 20) src[i] = 1;
+    if (imgData[i * 4 + 3] > 20) {
+      src[i] = 1;
+      count++;
+    }
   }
 
-  // BFS dilation from all letter pixels
+  if (count < 20) {
+    _tTolMap = null;
+    return;
+  }
+
   const dist = new Int16Array(W * H).fill(32767);
   const queue = [];
   for (let i = 0; i < W * H; i++) {
@@ -1026,7 +1563,6 @@ function buildToleranceMap(letter, W, H) {
   }
 
   let head = 0;
-  const dirs = [-W, W, -1, 1];
   while (head < queue.length) {
     const idx = queue[head++];
     const d   = dist[idx] + 1;
@@ -1057,7 +1593,7 @@ function initTraceCanvas() {
   const canvas = document.getElementById('trace-canvas');
   if (!canvas) return;
 
-  const letter  = _tLetters[_tIdx] || 'A';
+  const letter  = (_tLetters && _tLetters[_tIdx]) ? _tLetters[_tIdx] : (_tLang === 'hindi' ? 'अ' : _tLang === 'maths' ? '1' : 'A');
   const W       = Math.max(canvas.clientWidth || 480, 200);
   const H       = 260;
   canvas.width  = W; canvas.height = H;
@@ -1205,17 +1741,18 @@ function doneTracing() {
 }
 
 // ── Save tracing step report ──────────────────────────────────
-function saveTracingReport(letter, lang, sheet, accuracy) {
+function saveTracingReport(letter, lang, p3, p4) {
+  const sheet = typeof p3 === 'string' ? p3 : (typeof p4 === 'string' ? p4 : '4-line');
+  const accuracy = typeof p3 === 'number' ? p3 : (typeof p4 === 'number' ? p4 : 0);
   try {
     const key = 'kw_trace_reports';
     const list = JSON.parse(localStorage.getItem(key) || '[]');
     list.unshift({
       letter, lang, sheet, accuracy,
-      mode:      _tMode,
       timestamp: new Date().toISOString(),
       date:      new Date().toLocaleDateString('en-IN'),
     });
-    if (list.length > 500) list.splice(500); // cap at 500 records
+    if (list.length > 500) list.splice(500);
     localStorage.setItem(key, JSON.stringify(list));
   } catch (_) { /* storage full — silently ignore */ }
 }
@@ -2155,453 +2692,48 @@ function renderGroupsOfTens(q) {
     </div>`;
 }
 
-
-function loadLetter(lang, idx) {
-  _tLang = lang;
-  _tLetters = lang === 'hindi' ? HINDI_LETTERS : ENG_LETTERS;
-  _tIdx = idx;
-
-  const canvasArea = document.getElementById('canvas-area');
-  const label = document.getElementById('trace-label');
-  if (canvasArea) canvasArea.style.display = 'block';
-  if (label) label.textContent = `Tracing: "${_tLetters[_tIdx]}"`;
-
-  initTraceCanvas();
-}
-
-function nextTraceLetter() {
-  _tIdx = (_tIdx + 1) % _tLetters.length;
-  const label = document.getElementById('trace-label');
-  if (label) label.textContent = `Tracing: "${_tLetters[_tIdx]}"`;
-  initTraceCanvas();
-}
-
-function initTraceCanvas() {
-  const canvas = document.getElementById('trace-canvas');
-  if (!canvas) return;
-  const letter = _tLetters[_tIdx];
-  const isHindi = _tLang === 'hindi';
-
-  const W = canvas.clientWidth || 480;
-  const H = 280;
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.height = H + 'px';
-
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-
-  function drawGuide() {
-    ctx.clearRect(0, 0, W, H);
-    // Lined paper bg
-    ctx.fillStyle = '#FEFCF7';
-    ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = '#E8DFC8'; ctx.lineWidth = 1;
-    for (let y = 40; y < H; y += 40) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-    }
-    // Letter guide — dotted
-    const fs = Math.min(W * 0.48, 170);
-    ctx.font = `bold ${fs}px '${isHindi ? 'Hind' : 'Nunito'}', sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.save();
-    ctx.setLineDash([5, 7]);
-    ctx.strokeStyle = '#C4B5FD'; ctx.lineWidth = 5;
-    ctx.strokeText(letter, W / 2, H / 2 + 8);
-    ctx.restore();
-    ctx.fillStyle = 'rgba(196,181,253,0.18)';
-    ctx.fillText(letter, W / 2, H / 2 + 8);
-    // Hint arrow
-    ctx.fillStyle = '#FF8C42';
-    ctx.font = 'bold 13px Nunito, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('▶ Start here', 12, 22);
-  }
-
-  drawGuide();
-
-  // Replace canvas node to remove stale listeners
-  const fresh = canvas.cloneNode(false);
-  fresh.id = 'trace-canvas';
-  fresh.width = canvas.width; fresh.height = canvas.height;
-  fresh.style.cssText = canvas.style.cssText;
-  canvas.parentNode.replaceChild(fresh, canvas);
-
-  const fc = fresh;
-  const fctx = fc.getContext('2d');
-  fctx.scale(dpr, dpr);
-  fctx.clearRect(0, 0, W, H);
-  drawGuide.call({ _c: fc, _ctx: fctx });
-  // Re-draw guide on fresh canvas
-  fctx.clearRect(0, 0, W, H);
-  fctx.fillStyle = '#FEFCF7'; fctx.fillRect(0, 0, W, H);
-  fctx.strokeStyle = '#E8DFC8'; fctx.lineWidth = 1;
-  for (let y = 40; y < H; y += 40) {
-    fctx.beginPath(); fctx.moveTo(0, y); fctx.lineTo(W, y); fctx.stroke();
-  }
-  const fs2 = Math.min(W * 0.48, 170);
-  fctx.font = `bold ${fs2}px '${isHindi ? 'Hind' : 'Nunito'}', sans-serif`;
-  fctx.textAlign = 'center'; fctx.textBaseline = 'middle';
-  fctx.save(); fctx.setLineDash([5, 7]);
-  fctx.strokeStyle = '#C4B5FD'; fctx.lineWidth = 5;
-  fctx.strokeText(letter, W / 2, H / 2 + 8); fctx.restore();
-  fctx.fillStyle = 'rgba(196,181,253,0.18)'; fctx.fillText(letter, W / 2, H / 2 + 8);
-  fctx.fillStyle = '#FF8C42'; fctx.font = 'bold 13px Nunito,sans-serif';
-  fctx.textAlign = 'left'; fctx.fillText('▶ Start here', 12, 22);
-
-  // Drawing mechanics
-  let drawing = false, lx = 0, ly = 0;
-  function pos(e) {
-    const r = fc.getBoundingClientRect();
-    const sx = W / r.width, sy = H / r.height;
-    if (e.touches) return { x:(e.touches[0].clientX - r.left)*sx, y:(e.touches[0].clientY - r.top)*sy };
-    return { x:(e.clientX - r.left)*sx, y:(e.clientY - r.top)*sy };
-  }
-  function stroke(x, y) {
-    fctx.beginPath(); fctx.moveTo(lx, ly); fctx.lineTo(x, y);
-    fctx.strokeStyle = '#6C63FF'; fctx.lineWidth = 5;
-    fctx.lineCap = 'round'; fctx.lineJoin = 'round'; fctx.stroke();
-    lx = x; ly = y;
-  }
-
-  fc.addEventListener('mousedown', e => { e.preventDefault(); drawing=true; const p=pos(e); lx=p.x; ly=p.y; });
-  fc.addEventListener('mousemove', e => { if(!drawing)return; const p=pos(e); stroke(p.x,p.y); });
-  fc.addEventListener('mouseup', () => drawing=false);
-  fc.addEventListener('mouseleave', () => drawing=false);
-  fc.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; const p=pos(e); lx=p.x; ly=p.y; }, {passive:false});
-  fc.addEventListener('touchmove',  e => { if(!drawing)return; e.preventDefault(); const p=pos(e); stroke(p.x,p.y); }, {passive:false});
-  fc.addEventListener('touchend', () => drawing=false);
-
-  // Store ctx for clear
-  window._traceCtx = { ctx: fctx, W, H, letter, isHindi, dpr };
-}
-
-function clearCanvas() {
-  const fc = document.getElementById('trace-canvas');
-  if (!fc) return;
-  initTraceCanvas(); // re-init redraws the guide
-}
-
 // ══════════════════════════════════════════════════════════════
-// SCREEN: MENTOR DASHBOARD
+// NUMBER_WRITE — See digit, write number word name
 // ══════════════════════════════════════════════════════════════
-function renderMentorDashboard() {
-  state.mode = 'mentor';
-  const custom = getCustomWorksheets().length;
-  const total  = ALL_WORKSHEETS.length + custom;
-
-  const subCards = Object.values(SUBJECTS).map(sub => {
-    const count = getWorksheetList(sub.id).length;
-    return `
-      <button class="mentor-subject-card" onclick="navigate('/mentor/subject/${sub.id}')" id="msub-${sub.id}">
-        <div class="sub-icon" style="background:${sub.light}"><span style="font-size:24px">${sub.emoji}</span></div>
-        <div class="sub-info">
-          <div class="sub-name">${sub.name}</div>
-          <div class="sub-count">${count} worksheets</div>
-        </div>
-      </button>`;
-  }).join('');
-
-  setApp(`
-    <div class="mentor-screen screen">
-      <div class="mentor-dashboard-hero">
-        <div class="dashboard-greeting">Welcome, <span>Mentor!</span> 👋</div>
-        <div class="dashboard-subtitle">UKG-C · Term 1 Examination Preparation</div>
-        <div class="dashboard-stats">
-          <div class="dashboard-stat"><div class="stat-number">${total}</div><div class="stat-label">Total Sheets</div></div>
-          <div class="dashboard-stat"><div class="stat-number">${custom}</div><div class="stat-label">My Sheets</div></div>
-          <div class="dashboard-stat"><div class="stat-number">5</div><div class="stat-label">Subjects</div></div>
-        </div>
+function renderNumberWrite(q) {
+  const digit = q.digit || q.number || '5';
+  return `
+    <div class="number-write-area">
+      <div style="font-size:72px;font-weight:800;color:var(--primary);text-align:center;margin-bottom:8px">${esc(String(digit))}</div>
+      <div style="font-size:14px;color:#7A7A8A;text-align:center;margin-bottom:12px">
+        ${q.text ? esc(q.text) : 'Write the number name word:'}
       </div>
-      <div class="mentor-body">
-        <div class="mentor-section-header">
-          <div class="mentor-section-title">📚 Subjects</div>
-        </div>
-        <div class="mentor-subject-grid">${subCards}</div>
-        <div style="margin-top:24px">
-          <div class="mentor-section-title" style="margin-bottom:12px">⚡ Quick Actions</div>
-          <div style="display:flex;flex-wrap:wrap;gap:12px">
-            <button class="btn btn-primary" onclick="navigate('/mentor/builder')" id="btn-create-ws">+ Create Worksheet</button>
-            <button class="btn btn-dark" onclick="navigate('/')" id="btn-switch-child">👶 Switch to Child</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `);
-}
-
-// ══════════════════════════════════════════════════════════════
-// SCREEN: MENTOR SUBJECT VIEW
-// ══════════════════════════════════════════════════════════════
-function renderMentorSubject(subjectId) {
-  const sub = SUBJECTS[subjectId];
-  if (!sub) return navigate('/mentor');
-  const wsList   = getWorksheetList(subjectId);
-  const progress = getProgress();
-  const customIds = getCustomWorksheets().map(w => w.id);
-
-  const cards = wsList.map((ws, idx) => {
-    const p = progress[ws.id];
-    const isCustom = customIds.includes(ws.id);
-    return `
-      <div class="mentor-worksheet-card" id="mwc-${ws.id}">
-        <div class="mwc-num" style="background:${sub.color}">${idx + 1}</div>
-        <div class="mwc-info">
-          <div class="mwc-title">${esc(ws.title)}</div>
-          <div class="mwc-meta">
-            ${badge(ws.difficulty)}
-            <span>${ws.questions.length} Q</span>
-            ${p ? `<span style="color:#43D9A2">✓ ${p.pct}%</span>` : ''}
-            ${isCustom ? '<span style="color:#FF8C42">Custom</span>' : ''}
-          </div>
-        </div>
-        <div class="mwc-actions">
-          <button class="icon-btn print" onclick="navigate('/mentor/print/${ws.id}')" title="Print" id="print-${ws.id}">🖨</button>
-          ${isCustom ? `
-            <button class="icon-btn" onclick="navigate('/mentor/builder/${ws.id}')" title="Edit" id="edit-${ws.id}">✏️</button>
-            <button class="icon-btn danger" onclick="confirmDeleteWS('${ws.id}')" title="Delete" id="del-${ws.id}">🗑</button>
-          ` : ''}
-        </div>
-      </div>`;
-  }).join('');
-
-  setApp(`
-    <div class="mentor-screen screen">
-      <div class="mentor-header">
-        <button class="back-btn" onclick="navigate('/mentor')" id="btn-back-msub">←</button>
-        <h1>${sub.emoji} ${sub.name}</h1>
-      </div>
-      <div class="mentor-worksheet-list">
-        ${cards || `<div class="empty-state" style="color:var(--dark-text-secondary)"><div class="empty-icon">📭</div><h3>No worksheets yet</h3><p>Create the first worksheet for this subject!</p></div>`}
-      </div>
-      <button class="fab" onclick="navigate('/mentor/builder')" id="btn-fab" title="Create">+</button>
-    </div>
-  `);
-}
-
-function confirmDeleteWS(id) {
-  if (confirm('Delete this worksheet? This cannot be undone.')) {
-    deleteCustomWorksheet(id);
-    showToast('Worksheet deleted', 'success');
-    const segs = window.location.hash.replace('#/','').split('/');
-    if (segs[1] === 'subject') renderMentorSubject(segs[2]);
-    else navigate('/mentor');
-  }
-}
-
-// ══════════════════════════════════════════════════════════════
-// SCREEN: MENTOR BUILDER
-// ══════════════════════════════════════════════════════════════
-function renderBuilder(editId) {
-  if (editId) {
-    const existing = getCustomWorksheets().find(w => w.id === editId);
-    if (existing) {
-      state.builder = { editId, title: existing.title, subject: existing.subject,
-        difficulty: existing.difficulty, description: existing.description || '',
-        questions: [...existing.questions], addingType: 'MCQ' };
-    }
-  } else {
-    state.builder = { editId: null, title: '', subject: 'english', difficulty: 'easy',
-      description: '', questions: [], addingType: 'MCQ' };
-  }
-  _renderBuilderUI();
-}
-
-function _renderBuilderUI() {
-  const b = state.builder;
-  const qList = b.questions.map((q, i) => `
-    <div class="built-q-card" id="bq-${i}">
-      <div class="built-q-idx">${i + 1}</div>
-      <div class="built-q-text">${esc(q.text)}</div>
-      <div class="built-q-type">${q.type}</div>
-      <button class="icon-btn danger" onclick="removeBuilderQ(${i})" id="rm-${i}">✕</button>
-    </div>`).join('');
-
-  const qFormHtml = _renderQForm(b.addingType);
-
-  setApp(`
-    <div class="builder-screen mentor-screen screen">
-      <div class="mentor-header">
-        <button class="back-btn" onclick="navigate('/mentor')" id="btn-back-builder">←</button>
-        <h1>${b.editId ? '✏️ Edit Worksheet' : '+ New Worksheet'}</h1>
-      </div>
-      <div class="builder-body">
-        <div class="builder-section-header">Worksheet Details</div>
-        <div class="form-group">
-          <label class="form-label">Title *</label>
-          <input class="form-input" id="b-title" type="text" placeholder="e.g., Addition Practice" value="${esc(b.title)}" oninput="state.builder.title=this.value">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="form-group">
-            <label class="form-label">Subject</label>
-            <select class="form-select" id="b-subject" onchange="state.builder.subject=this.value">
-              ${Object.values(SUBJECTS).map(s => `<option value="${s.id}" ${b.subject===s.id?'selected':''}>${s.emoji} ${s.name}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Difficulty</label>
-            <select class="form-select" id="b-difficulty" onchange="state.builder.difficulty=this.value">
-              <option value="easy"   ${b.difficulty==='easy'?'selected':''}>🟢 Easy</option>
-              <option value="medium" ${b.difficulty==='medium'?'selected':''}>🟡 Medium</option>
-              <option value="hard"   ${b.difficulty==='hard'?'selected':''}>🔴 Hard</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Description (optional)</label>
-          <input class="form-input" id="b-desc" type="text" placeholder="Brief description" value="${esc(b.description)}" oninput="state.builder.description=this.value">
-        </div>
-
-        <div class="builder-section-header">Add Questions (${b.questions.length} added)</div>
-        <div class="q-type-grid">
-          ${[{t:'MCQ',i:'🔘',l:'MCQ'},{t:'TRUE_FALSE',i:'✅',l:'True/False'},{t:'FILL_BLANK',i:'___',l:'Fill Blank'}].map(x => `
-            <button class="q-type-btn ${b.addingType===x.t?'active':''}" onclick="setBuilderQType('${x.t}')" id="qt-${x.t}">
-              <span class="q-icon">${x.i}</span>${x.l}
-            </button>`).join('')}
-        </div>
-
-        ${qFormHtml}
-
-        ${b.questions.length > 0 ? `
-          <div class="builder-section-header">Questions Added</div>
-          <div class="questions-in-builder">${qList}</div>` : ''}
-
-        <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="saveBuilderWS()" id="btn-save-ws">
-          💾 ${b.editId ? 'Update Worksheet' : 'Save Worksheet'}
-        </button>
-      </div>
-    </div>
-  `);
-}
-
-function _renderQForm(type) {
-  if (type === 'MCQ') return `
-    <div class="q-builder-card">
-      <div class="q-builder-header"><span class="q-num-badge">MCQ Question</span></div>
-      <div class="form-group">
-        <label class="form-label">Question Text *</label>
-        <input class="form-input" id="qf-q" type="text" placeholder="Type the question…">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Options (select the correct one)</label>
-        ${['A','B','C','D'].map((l,i) => `
-          <div class="mcq-option-row">
-            <input type="radio" name="correct-opt" class="correct-radio" value="${l}" id="co-${l}">
-            <span class="opt-label">${l}</span>
-            <input class="form-input" style="height:40px;flex:1" id="qf-opt-${l}" type="text" placeholder="Option ${l}…">
-          </div>`).join('')}
-      </div>
-      <div class="form-group">
-        <label class="form-label">Hint (optional)</label>
-        <input class="form-input" id="qf-hint" type="text" placeholder="A helpful hint…">
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="addBuilderQ('MCQ')" id="btn-add-mcq">+ Add This Question</button>
+      <input id="numw-input" class="fill-blank-input" type="text"
+        placeholder="Type the number name..." autocomplete="off" autocorrect="off" spellcheck="false"
+        style="width:100%;font-size:20px;text-align:center">
     </div>`;
+}
 
-  if (type === 'TRUE_FALSE') return `
-    <div class="q-builder-card">
-      <div class="q-builder-header"><span class="q-num-badge">True / False</span></div>
-      <div class="form-group">
-        <label class="form-label">Statement *</label>
-        <input class="form-input" id="qf-q" type="text" placeholder="Type a True or False statement…">
+// ══════════════════════════════════════════════════════════════
+// READ_AND_ANSWER — Passage + comprehension question
+// ══════════════════════════════════════════════════════════════
+function renderReadAndAnswer(q) {
+  return `
+    <div class="read-answer-area">
+      <div style="background:#1F1F35;border-radius:12px;padding:16px;margin-bottom:16px;border-left:4px solid var(--accent);font-size:16px;line-height:1.6">
+        📖 <strong>Passage:</strong><br>${esc(q.passage || '')}
       </div>
-      <div class="form-group">
-        <label class="form-label">Correct Answer</label>
-        <div style="display:flex;gap:16px">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--dark-text-primary)">
-            <input type="radio" name="tf-ans" value="true" id="tf-t" style="accent-color:var(--accent)"> True
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--dark-text-primary)">
-            <input type="radio" name="tf-ans" value="false" id="tf-f" style="accent-color:var(--danger)"> False
-          </label>
-        </div>
+      <div style="font-weight:700;font-size:16px;margin-bottom:12px;color:var(--text-bright)">
+        ❓ ${esc(q.text || 'Answer the question:')}
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="addBuilderQ('TRUE_FALSE')" id="btn-add-tf">+ Add This Question</button>
+      <input id="raa-input" class="fill-blank-input" type="text"
+        placeholder="Type your answer here..." autocomplete="off" autocorrect="off" spellcheck="false"
+        style="width:100%;font-size:18px">
     </div>`;
-
-  if (type === 'FILL_BLANK') return `
-    <div class="q-builder-card">
-      <div class="q-builder-header"><span class="q-num-badge">Fill in the Blank</span></div>
-      <div class="form-group">
-        <label class="form-label">Question / Sentence *</label>
-        <input class="form-input" id="qf-q" type="text" placeholder='e.g., "The cat sat on the ___."'>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Correct Answer *</label>
-        <input class="form-input" id="qf-ans" type="text" placeholder="The word that fills the blank…">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Hint (optional)</label>
-        <input class="form-input" id="qf-hint" type="text" placeholder="A helpful hint…">
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="addBuilderQ('FILL_BLANK')" id="btn-add-fb">+ Add This Question</button>
-    </div>`;
-  return '';
 }
 
-function setBuilderQType(type) { state.builder.addingType = type; _renderBuilderUI(); }
 
-function addBuilderQ(type) {
-  const qtxt = ($('#qf-q') || {}).value || '';
-  if (!qtxt.trim()) { showToast('Please enter the question text', 'error'); return; }
-  const q = { id: `cq_${Date.now()}`, type, text: qtxt.trim(), marks: 1 };
 
-  if (type === 'MCQ') {
-    const opts = ['A','B','C','D'].map(l => ($(`#qf-opt-${l}`) || {}).value || '').filter(Boolean);
-    if (opts.length < 2) { showToast('Please add at least 2 options', 'error'); return; }
-    const chk = document.querySelector('input[name="correct-opt"]:checked');
-    if (!chk) { showToast('Please mark the correct option', 'error'); return; }
-    q.options = opts;
-    q.answer = opts[['A','B','C','D'].indexOf(chk.value)];
-    const hint = ($('#qf-hint') || {}).value;
-    if (hint) q.hint = hint.trim();
-  } else if (type === 'TRUE_FALSE') {
-    const chk = document.querySelector('input[name="tf-ans"]:checked');
-    if (!chk) { showToast('Please select True or False', 'error'); return; }
-    q.answer = chk.value === 'true';
-  } else if (type === 'FILL_BLANK') {
-    const ans = ($('#qf-ans') || {}).value || '';
-    if (!ans.trim()) { showToast('Please enter the correct answer', 'error'); return; }
-    q.answer = ans.trim();
-    const hint = ($('#qf-hint') || {}).value;
-    if (hint) q.hint = hint.trim();
-  }
 
-  state.builder.questions.push(q);
-  showToast(`Question ${state.builder.questions.length} added!`, 'success');
-  _renderBuilderUI();
-}
 
-function removeBuilderQ(idx) {
-  state.builder.questions.splice(idx, 1);
-  _renderBuilderUI();
-}
+// Note: Mentor views (renderMentorDashboard, renderMentorSubject, renderBuilder, renderPrint) are provided by mentor.js
 
-function saveBuilderWS() {
-  const b = state.builder;
-  const title = ($('#b-title') || {}).value || b.title;
-  const subject = ($('#b-subject') || {}).value || b.subject;
-  const difficulty = ($('#b-difficulty') || {}).value || b.difficulty;
-  const description = ($('#b-desc') || {}).value || b.description;
-
-  if (!title.trim()) { showToast('Please enter a worksheet title', 'error'); return; }
-  if (b.questions.length === 0) { showToast('Please add at least 1 question', 'error'); return; }
-
-  const ws = {
-    id: b.editId || `custom_${Date.now()}`,
-    subject, difficulty, topic: 'Custom',
-    title: title.trim(),
-    description: description.trim(),
-    estimatedTime: Math.max(5, Math.floor(b.questions.length * 1.5)),
-    questions: b.questions,
-    isCustom: true,
-    createdAt: new Date().toISOString(),
-  };
-  saveCustomWorksheet(ws);
-  showToast('Worksheet saved! 🎉', 'success');
-  setTimeout(() => navigate(`/mentor/subject/${subject}`), 1000);
-}
+// Note: Worksheet Builder is provided by mentor.js (renderBuilder, _renderBuilderUI, saveBuilderWorksheet, etc.)
 
 // ══════════════════════════════════════════════════════════════
 // SCREEN: PRINT VIEW
@@ -2613,6 +2745,63 @@ function renderPrint(worksheetId) {
   if (!ws) return navigate('/mentor');
   const sub = SUBJECTS[ws.subject] || {};
   _ansKeyVisible = false;
+
+  if (ws.isTuitionSheet || ws.subject === 'tuition') {
+    const sheetType = ws.sheetType || ws.questions[0]?.sheetType || '4-line';
+    const sampleText = ws.sampleText || ws.questions[0]?.sampleText || '';
+    const instruction = ws.instruction || ws.questions[0]?.instruction || ws.questions[0]?.text || '';
+    const comments = ws.comments || ws.questions[0]?.comments || '';
+
+    const printQuestionsHtml = (ws.questions && ws.questions.length > 0)
+      ? ws.questions.map((q, i) => `<div style="font-size:15px;font-weight:700;color:#111;margin-bottom:4px">Q${i+1}: ${esc(q.text || q.instruction || instruction)}</div>`).join('')
+      : `<div style="font-size:15px;font-weight:700;color:#111;margin-bottom:4px">Q1: ${esc(instruction)}</div>`;
+
+    setApp(`
+      <div class="print-view">
+        <div class="no-print" style="position:fixed;top:0;left:0;right:0;background:var(--dark-surface-1);
+          border-bottom:1px solid var(--dark-border);padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:200">
+          <button class="btn btn-dark btn-sm" onclick="navigate('/mentor/subject/${ws.subject}')" id="btn-back-print">← Back</button>
+          <span style="flex:1;color:var(--dark-text-primary);font-size:14px;font-weight:600">Print Preview: ${esc(ws.title)}</span>
+          <button class="btn btn-primary btn-sm" onclick="window.print()" id="btn-print">🖨 Print</button>
+        </div>
+        <div style="height:60px" class="no-print"></div>
+
+        <div class="print-header">
+          <div class="print-school-name">${esc(getSchoolName())}</div>
+          <div class="print-ws-title">${esc(ws.title)}</div>
+          <div class="print-ws-meta">Class: UKG-C &nbsp;·&nbsp; Subject: ${esc(sub.name||'Written Test')} &nbsp;·&nbsp; Difficulty: ${esc(ws.difficulty)} &nbsp;·&nbsp; Total Questions: ${(ws.questions||[]).length||1}</div>
+        </div>
+        <div class="print-student-row">
+          <div><div class="print-field-label">Name</div><div class="print-field"></div></div>
+          <div><div class="print-field-label">Date</div><div class="print-field"></div></div>
+        </div>
+
+        <div style="margin-bottom:14px">
+          ${printQuestionsHtml}
+          ${comments ? `<div style="font-size:13px;color:#555;font-style:italic;margin-top:4px">Note: ${esc(comments)}</div>` : ''}
+        </div>
+
+        <div class="print-tuition-sheet-wrap" style="width:100%;margin-top:10px">
+          <canvas id="print-tuition-canvas" style="width:100%;height:950px;border:1px solid #ccc;border-radius:4px;background:#FEFCF7"></canvas>
+        </div>
+
+        <div class="print-footer">
+          Generated by KidWorksheets &nbsp;·&nbsp; ${esc(getSchoolName())} &nbsp;·&nbsp; UKG-C Term 1 · 2026–27
+        </div>
+      </div>
+    `);
+
+    setTimeout(() => {
+      const cvs = document.getElementById('print-tuition-canvas');
+      if (cvs) {
+        cvs.width = cvs.clientWidth || 800;
+        cvs.height = 950;
+        const ctx = cvs.getContext('2d');
+        drawTuitionNotebookLines(ctx, cvs.width, cvs.height, sheetType, sampleText);
+      }
+    }, 50);
+    return;
+  }
 
   const questionsHtml = ws.questions.map((q, i) => {
     let ansArea = '';
@@ -2647,7 +2836,7 @@ function renderPrint(worksheetId) {
       <div style="height:60px" class="no-print"></div>
 
       <div class="print-header">
-        <div class="print-school-name">Vardhman Srikalyan International School</div>
+        <div class="print-school-name">${esc(getSchoolName())}</div>
         <div class="print-ws-title">${esc(ws.title)}</div>
         <div class="print-ws-meta">Class: UKG-C &nbsp;·&nbsp; Subject: ${esc(sub.name||'')} &nbsp;·&nbsp; Difficulty: ${esc(ws.difficulty)} &nbsp;·&nbsp; Total Questions: ${ws.questions.length}</div>
       </div>
@@ -2657,7 +2846,7 @@ function renderPrint(worksheetId) {
       </div>
       ${questionsHtml}
       <div class="print-footer">
-        Generated by KidWorksheets &nbsp;·&nbsp; Vardhman Srikalyan International School &nbsp;·&nbsp; UKG-C Term 1 · 2026–27
+        Generated by KidWorksheets &nbsp;·&nbsp; ${esc(getSchoolName())} &nbsp;·&nbsp; UKG-C Term 1 · 2026–27
       </div>
     </div>
   `);
@@ -2727,7 +2916,7 @@ window.addEventListener('appinstalled', () => {
 // ══════════════════════════════════════════════════════════════
 function init() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('./sw.js')
       .then(r => console.log('[KW] SW registered:', r.scope))
       .catch(e => console.warn('[KW] SW registration failed:', e));
   }

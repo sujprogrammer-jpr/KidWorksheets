@@ -1,18 +1,18 @@
 // KidWorksheets Service Worker v1.0
 // Provides offline caching for all app assets
 
-const CACHE_NAME = 'kidworksheets-v2';
+const CACHE_NAME = 'kidworksheets-v3';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/css/app.css',
-  '/js/data.js',
-  '/js/data2.js',
-  '/js/mentor.js',
-  '/js/app.js',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  './',
+  './index.html',
+  './css/app.css',
+  './js/data.js',
+  './js/data2.js',
+  './js/mentor.js',
+  './js/app.js',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
   'https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=Hind:wght@400;500;600&display=swap',
 ];
 

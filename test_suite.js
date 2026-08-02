@@ -1,4 +1,4 @@
-﻿// KidWorksheets — Static Analysis & Logic Test Suite
+// KidWorksheets — Static Analysis & Logic Test Suite
 // Tests: JS syntax, function existence, data integrity, question type coverage
 const fs = require('fs');
 const path = require('path');
@@ -33,7 +33,7 @@ const d2pos = indexHtml.indexOf('data2.js');
 const menPos = indexHtml.indexOf('mentor.js');
 const appPos = indexHtml.indexOf('app.js"');
 if (d2pos < menPos && menPos < appPos) ok('Script load order: data2 < mentor < app');
-else fail('Script load order WRONG', data2@ mentor@ app@);
+else fail('Script load order WRONG: data2 < mentor < app expected');
 
 console.log('\n=== 3. SERVICE WORKER ===');
 swJs.includes('kidworksheets-v2') ? ok('SW cache version is v2') : fail('SW still on v1 - old cache');
@@ -184,5 +184,5 @@ console.log('  Failed:   '+failed);
 console.log('  Warnings: '+warnings);
 if (issues.length) {
   console.log('\n=== ISSUES TO FIX ===');
-  issues.forEach((i,n) => console.log('  '+(n+1)+'. ❌ '+i.label+' '+（i.detail||'')));
+  issues.forEach((i,n) => console.log('  '+(n+1)+'. ❌ '+i.label+' '+(i.detail||'')));
 }
