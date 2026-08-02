@@ -2916,7 +2916,7 @@ window.addEventListener('appinstalled', () => {
 // ══════════════════════════════════════════════════════════════
 function init() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('./sw.js')
       .then(r => console.log('[KW] SW registered:', r.scope))
       .catch(e => console.warn('[KW] SW registration failed:', e));
   }

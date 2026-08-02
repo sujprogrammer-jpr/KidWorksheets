@@ -2,7 +2,7 @@
   "name": "KidWorksheets — UKG-C Exam Prep",
   "short_name": "KidWorksheets",
   "description": "Interactive exam preparation worksheets for UKG-C Term 1. Make learning fun!",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#FFF8E7",
   "theme_color": "#6C63FF",
@@ -29,14 +29,14 @@
       "name": "Child Mode",
       "short_name": "Child",
       "description": "Open as Child for worksheet practice",
-      "url": "/#/child",
+      "url": "./#/child",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Mentor Mode",
       "short_name": "Mentor",
       "description": "Open as Mentor to manage worksheets",
-      "url": "/#/mentor",
+      "url": "./#/mentor",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
