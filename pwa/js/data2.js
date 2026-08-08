@@ -1300,40 +1300,41 @@ const FINAL_ART_WORKSHEETS = [
 ];
 
 // ═════════════════════════════════════════════════════════════════════════════
-// DEVANSH SCHOOL ASSESSMENT TEST WORKSHEETS (From Reference Tests)
+// ═════════════════════════════════════════════════════════════════════════════
+// DEVANSH SCHOOL ASSESSMENT TEST WORKSHEETS (Cleaned Prompts & Titles)
 // ═════════════════════════════════════════════════════════════════════════════
 
 const DEVANSH_TEST_WORKSHEETS = [
   {
-    id: 'eng_devansh_001', subject: 'english', title: '🏫 English School Test & Animal Movements',
-    topic: 'School Formative Assessment 1', difficulty: 'medium', estimatedTime: 12,
-    description: 'Devansh’s school Formative Assessment test paper questions & animal movements vocabulary!',
+    id: 'eng_devansh_001', subject: 'english', title: '🏫 English Alphabet & Animal Movements',
+    topic: 'English Skills & Vocabulary', difficulty: 'medium', estimatedTime: 12,
+    description: 'Alphabet letter matching, beginning sounds, articles, and animal movement vocabulary!',
     questions: [
-      q('ep_d1_q1','MATCH','Match the uppercase letters to their lowercase from Devansh’s test!',{
+      q('ep_d1_q1','MATCH','Match the uppercase letters to their lowercase letters:',{
         pairs:[{left:'B',right:'b'},{left:'F',right:'f'},{left:'Q',right:'q'},{left:'W',right:'w'},{left:'M',right:'m'}]
       }),
-      q('ep_d1_q2','WORD_FIRST_LETTER','___mpire (First letter from school test picture)',{
+      q('ep_d1_q2','WORD_FIRST_LETTER','___mpire (Select the missing first letter)',{
         wordWithBlank:'___mpire',options:['u','e','o','i'],answer:'u',hint:'Umpire overseeing a match'
       }),
-      q('ep_d1_q3','CIRCLE_FIND','Circle all the VOWELS from Devansh’s balloon test page!',{
+      q('ep_d1_q3','CIRCLE_FIND','Tap all the VOWELS in the balloons!',{
         items:['o','g','i','t','y','a','q','e','l','u'],correctItems:['o','i','a','e','u']
       }),
-      q('ep_d1_q4','MCQ','Choose the correct article for elephant (from test):',{
+      q('ep_d1_q4','MCQ','Choose the correct article for elephant:',{
         options:['a elephant','an elephant','the elephant','two elephant'],answer:'an elephant'
       }),
-      q('ep_d1_q5','MATCH','Match each animal to its movement (From learning chart)!',{
+      q('ep_d1_q5','MATCH','Match each animal to its movement:',{
         pairs:[{left:'Snake 🐍',right:'Slither (रेंगना)'},{left:'Frog 🐸',right:'Hop (उछलना)'},{left:'Horse 🐴',right:'Gallop (सरपट)'},{left:'Lion 🦁',right:'Prowl (दबे पाँव)'},{left:'Bird 🐦',right:'Fly (उड़ना)'}]
       }),
-      q('ep_d1_q6','MATCH','Match the picture words from CVC test sheet:',{
+      q('ep_d1_q6','MATCH','Match the picture words:',{
         pairs:[{left:'Pan 🍳',right:'pan'},{left:'Leg 🦵',right:'leg'},{left:'Fan 🪭',right:'fan'},{left:'Keg 🛢️',right:'keg'},{left:'Bed 🛏️',right:'bed'}]
       }),
       q('ep_d1_q7','WORD_BUILD','Tap letters to build word JAM.',{
         letterPool:['J','A','M','C','B','O'],answer:'JAM'
       }),
-      q('ep_d1_q8','UNSCRAMBLE','Unscramble word for headwear in test grid:',{
+      q('ep_d1_q8','UNSCRAMBLE','Unscramble word for headwear:',{
         scrambled:['A','H','T'],answer:'HAT',hint:'Hat'
       }),
-      q('ep_d1_q9','TEXT_HIGHLIGHT','Tap all CVC words from Devansh’s test page:',{
+      q('ep_d1_q9','TEXT_HIGHLIGHT','Tap all CVC words in the sentence:',{
         passage:'The hen saw a pen a jet and a web in the den near a peg.',
         correctWords:['hen','saw','pen','jet','web','den','peg']
       }),
@@ -1343,9 +1344,9 @@ const DEVANSH_TEST_WORKSHEETS = [
     ]
   },
   {
-    id: 'hindi_devansh_001', subject: 'hindi', title: '🏫 हिंदी जुलाई मासिक मूल्यांकन (July Test Paper)',
-    topic: 'मासिक मूल्यांकन प्रश्न पत्र', difficulty: 'medium', estimatedTime: 12,
-    description: 'देवांश् के स्कूल का जुलाई परीक्षा प्रश्न पत्र — श्रुतलेख, स्वर-व्यंजन श्रृंखला व चित्र नाम!',
+    id: 'hindi_devansh_001', subject: 'hindi', title: '🏫 हिंदी जुलाई अभ्यास (July Practice Worksheet)',
+    topic: 'मासिक अभ्यास', difficulty: 'medium', estimatedTime: 12,
+    description: 'श्रुतलेख, स्वर-व्यंजन श्रृंखला व चित्र नाम का सुंदर अभ्यास!',
     questions: [
       q('hp_d1_q1','SEQUENCE_NEXT','स्वर की श्रृंखला पूरी लिखो (अ से ऊ):',{
         given:['अ','आ','इ'],blanks:3,answers:['ई','उ','ऊ']
@@ -1353,7 +1354,7 @@ const DEVANSH_TEST_WORKSHEETS = [
       q('hp_d1_q2','SEQUENCE_NEXT','क वर्ग का क्रम पूरा करो:',{
         given:['क','ख','ग'],blanks:2,answers:['घ','ङ']
       }),
-      q('hp_d1_q3','DRAG_SLOT','अक्षर जोड़कर शब्द बनाओ (प्रश्न पत्र से):',{
+      q('hp_d1_q3','DRAG_SLOT','अक्षर जोड़कर शब्द बनाओ:',{
         slots:[{label:'न + ल =',answer:'नल'},{label:'ब + स =',answer:'बस'},{label:'स + ड़ + क =',answer:'सड़क'}],
         tilePool:['नल','बस','सड़क','घर','जल']
       }),
@@ -1369,7 +1370,7 @@ const DEVANSH_TEST_WORKSHEETS = [
       q('hp_d1_q7','MATCH','चित्र को सही नाम से मिलाओ:',{
         pairs:[{left:'🚰',right:'नल'},{left:'💧',right:'जल'},{left:'🏠',right:'घर'},{left:'🥭',right:'आम'}]
       }),
-      q('hp_d1_q8','CIRCLE_FIND','परीक्षा प्रश्न 1 के श्रुतलेख शब्दों पर गोला लगाओ!',{
+      q('hp_d1_q8','CIRCLE_FIND','श्रुतलेख वाले शब्दों पर गोला लगाओ!',{
         items:['बस','नल','गरम','शरबत','सड़क','अचकन','हाथ','ताला'],
         correctItems:['बस','नल','गरम','शरबत','सड़क']
       }),
@@ -1383,25 +1384,25 @@ const DEVANSH_TEST_WORKSHEETS = [
     ]
   },
   {
-    id: 'ga_devansh_001', subject: 'ga', title: '🏫 EVS School Test: Sense Organs & Habits',
-    topic: 'General Awareness FA-1', difficulty: 'medium', estimatedTime: 12,
-    description: 'Devansh’s EVS test: Sense organs, odd one out, good habits & body shadows!',
+    id: 'ga_devansh_001', subject: 'ga', title: '🏫 EVS Practice: Sense Organs & Habits',
+    topic: 'General Awareness Practice', difficulty: 'medium', estimatedTime: 12,
+    description: 'Sense organs, odd one out, good habits & body shadows practice!',
     questions: [
-      q('gp_d1_q1','MATCH','Match picture activity to correct sense organ (From EVS Test)!',{
+      q('gp_d1_q1','MATCH','Match picture activity to correct sense organ:',{
         pairs:[{left:'Seeing Telescope 🔭',right:'Eyes 👀'},{left:'Music Headphones 🎧',right:'Ears 👂'},{left:'Smelling Flower 🌹',right:'Nose 👃'},{left:'Lollipop Taste 🍭',right:'Tongue 👅'},{left:'Holding Ball 🏀',right:'Skin / Hand ✋'}]
       }),
-      q('gp_d1_q2','CIRCLE_FIND','Circle all the GOOD HABITS from test paper! (Tick ✓)',{
+      q('gp_d1_q2','CIRCLE_FIND','Circle all the GOOD HABITS in the list:',{
         items:['Eating junk food','Washing hands','Playing outdoors','Watching screen close','Brushing teeth','Eating in bed'],
         correctItems:['Washing hands','Playing outdoors','Brushing teeth']
       }),
-      q('gp_d1_q3','MCQ','Look at test row: Which item is the ODD ONE OUT for TASTE?',{
+      q('gp_d1_q3','MCQ','Which item is the ODD ONE OUT for TASTE?',{
         options:['Rock (hard texture)','Chocolate (sweet taste)','Banana (sweet taste)','Apple (sweet taste)'],
         answer:'Rock (hard texture)'
       }),
       q('gp_d1_q4','MATCH','Match body parts to their correct SHADOW!',{
         pairs:[{left:'Head 👤',right:'Head Shadow 👤'},{left:'Hand ✋',right:'Hand Shadow ✋'},{left:'Foot 🦶',right:'Foot Shadow 🦶'},{left:'Ear 👂',right:'Ear Shadow 👂'}]
       }),
-      q('gp_d1_q5','MCQ','Circle the correct family member (From test page A):',{
+      q('gp_d1_q5','MCQ','Circle the picture of a FAMILY MEMBER:',{
         options:['Grandfather','Father','Brother','Uncle'],answer:'Grandfather'
       }),
       q('gp_d1_q6','TRUE_FALSE','Eating chocolate in bed before sleep is a GOOD habit.',{
@@ -1411,7 +1412,7 @@ const DEVANSH_TEST_WORKSHEETS = [
         items:['Take a bath 🛁','Eat breakfast 🥣','Brush teeth 🪥','Wake up 🌅','Go to school 🏫'],
         correctOrder:['Wake up 🌅','Brush teeth 🪥','Take a bath 🛁','Eat breakfast 🥣','Go to school 🏫']
       }),
-      q('gp_d1_q8','MATCH','Match animals to their homes (From syllabus):',{
+      q('gp_d1_q8','MATCH','Match animals to their homes:',{
         pairs:[{left:'Bird 🐦',right:'Nest 🪺'},{left:'Lion 🦁',right:'Den 🪨'},{left:'Rabbit 🐇',right:'Burrow 🕳️'},{left:'Dog 🐶',right:'Kennel 🏠'}]
       }),
       q('gp_d1_q9','TEXT_HIGHLIGHT','Tap all 5 sense organs in the passage:',{
@@ -1425,9 +1426,9 @@ const DEVANSH_TEST_WORKSHEETS = [
     ]
   },
   {
-    id: 'math_devansh_001', subject: 'maths', title: '🏫 Maths School Test Paper & Concepts',
-    topic: 'Maths Term Exam', difficulty: 'medium', estimatedTime: 12,
-    description: 'Missing numbers, Greater/Less than, Tables 0-5, Tens & Ones from Devansh’s school exam!',
+    id: 'math_devansh_001', subject: 'maths', title: '🏫 Maths Practice & Concepts',
+    topic: 'Maths Concepts', difficulty: 'medium', estimatedTime: 12,
+    description: 'Missing numbers, Greater/Less than, Tables 0-5, Tens & Ones practice!',
     questions: [
       q('mp_d1_q1','SEQUENCE_NEXT','Complete missing numbers train (15 to 20):',{
         given:['15','16'],blanks:4,answers:['17','18','19','20']
@@ -1438,20 +1439,20 @@ const DEVANSH_TEST_WORKSHEETS = [
       q('mp_d1_q3','ARRANGE','Arrange numbers in ASCENDING order (Smallest to Biggest):',{
         items:['89','12','45','28','67'],correctOrder:['12','28','45','67','89']
       }),
-      q('mp_d1_q4','MATCH','Match numbers to Number Names from test syllabus:',{
+      q('mp_d1_q4','MATCH','Match numbers to Number Names:',{
         pairs:[{left:'11',right:'Eleven'},{left:'15',right:'Fifteen'},{left:'20',right:'Twenty'},{left:'18',right:'Eighteen'},{left:'12',right:'Twelve'}]
       }),
       q('mp_d1_q5','DRAG_SLOT','Table Multiplication (Tables 2 to 5):',{
         slots:[{label:'2 × 5 =',answer:'10'},{label:'3 × 4 =',answer:'12'},{label:'5 × 3 =',answer:'15'}],
         tilePool:['10','12','15','8','20']
       }),
-      q('mp_d1_q6','CIRCLE_FIND','Circle the BIGGEST number from Devansh’s math test list!',{
+      q('mp_d1_q6','CIRCLE_FIND','Circle the BIGGEST number in the list!',{
         items:['8','42','99','17','63'],correctItems:['99']
       }),
       q('mp_d1_q7','WORD_BUILD','Tap letters to spell Number Name 12:',{
         letterPool:['T','W','E','L','V','E','S','X'],answer:'TWELVE'
       }),
-      q('mp_d1_q8','MCQ','Concept test: Which object is HEAVY?',{
+      q('mp_d1_q8','MCQ','Concept practice: Which object is HEAVY?',{
         options:['Big Elephant 🐘','Feather 🪶','Paper 📄','Leaf 🍃'],answer:'Big Elephant 🐘'
       }),
       q('mp_d1_q9','SEQUENCE_PREV','Backward Counting: Write 3 numbers before 48.',{
@@ -1459,6 +1460,85 @@ const DEVANSH_TEST_WORKSHEETS = [
       }),
       q('mp_d1_q10','GROUPS_OF_TEN','How many Groups of Tens make 40?',{
         targetNumber:40,itemIcon:'🔴',groupSize:10,totalGroups:4,answer:4
+      })
+    ]
+  },
+  {
+    id: 'math_devansh_002', subject: 'maths', title: '🏫 Maths: Sizes, Shapes & Patterns',
+    topic: 'Maths Sizes & Shapes', difficulty: 'medium', estimatedTime: 12,
+    description: 'Odd one out, Tallest/Biggest, Longest/Smallest, Shapes & Patterns practice!',
+    questions: [
+      q('mp_d2_q1','CIRCLE_FIND','Odd One Out: Tap the picture in each row that is DIFFERENT!',{
+        items:['Rose Flower 🌹 (in butterfly row)','Pear 🍐 (in apple row)','Blue Bird 🐦 (in duck row)','Apple 🍎','Butterfly 🦋','Yellow Duck 🐥'],
+        correctItems:['Rose Flower 🌹 (in butterfly row)','Pear 🍐 (in apple row)','Blue Bird 🐦 (in duck row)']
+      }),
+      q('mp_d2_q2','MCQ','Which object is the TALLEST?',{
+        options:['Tall Wooden Ladder 🪜','Wooden Stool 🪵','Dining Chair 🪑'],answer:'Tall Wooden Ladder 🪜'
+      }),
+      q('mp_d2_q3','MCQ','Which animal is the BIGGEST?',{
+        options:['Big Elephant 🐘','Tiger 🐅','Small Mouse 🐭'],answer:'Big Elephant 🐘'
+      }),
+      q('mp_d2_q4','MCQ','Which rope is the LONGEST?',{
+        options:['Longest Wavy Rope 🪢','Medium Rope 🪢','Short Rope 🪢'],answer:'Longest Wavy Rope 🪢'
+      }),
+      q('mp_d2_q5','MCQ','Which frog is the SHORTEST?',{
+        options:['Tiny Short Frog 🐸','Big Tall Frog 🐸','Medium Frog 🐸'],answer:'Tiny Short Frog 🐸'
+      }),
+      q('mp_d2_q6','CIRCLE_FIND','Shapes Practice: Tap all objects that have a SQUARE shape!',{
+        items:['Square Window 🪟','Square Carrom Board ⏹️','Square Chess Board 🏁','Round Coin 🪙','Oval Egg 🥚'],
+        correctItems:['Square Window 🪟','Square Carrom Board ⏹️','Square Chess Board 🏁']
+      }),
+      q('mp_d2_q7','SEQUENCE_NEXT','Complete the caterpillar body pattern by writing the next 3 circle numbers:',{
+        given:['1','2','3'],blanks:3,answers:['4','5','6']
+      }),
+      q('mp_d2_q8','GROUPS_OF_TEN','Groups of Tens: How many items in 3 Groups of Tens?',{
+        targetNumber:30,itemIcon:'🌟',groupSize:10,totalGroups:3,answer:3
+      }),
+      q('mp_d2_q9','ARRANGE','Pattern Practice: Complete the shape pattern (Red Square, Red Square, Blue Circle, Red Square, Red Square...):',{
+        items:['Blue Circle 🔵','Red Square 🟥','Red Square 🟥'],correctOrder:['Red Square 🟥','Red Square 🟥','Blue Circle 🔵']
+      }),
+      q('mp_d2_q10','MCQ','Which tree is the SMALLEST tree?',{
+        options:['Tiny Potted Tree 🌳','Medium Oak Tree 🌳','Huge Giant Tree 🌳'],answer:'Tiny Potted Tree 🌳'
+      })
+    ]
+  },
+  {
+    id: 'ga_devansh_002', subject: 'ga', title: '🏫 EVS: Self Care, Family & Friendship',
+    topic: 'General Awareness Practice', difficulty: 'medium', estimatedTime: 12,
+    description: 'Self-reliance, Body parts & actions, Family members, Helping family & Friendship practice!',
+    questions: [
+      q('gp_d2_q1','CIRCLE_FIND','Self-Care Practice: Tap all activities you can do BY YOURSELF!',{
+        items:['Drinking water 🚰','Brushing teeth 🪥','Driving a car 🚗','Cooking hot food 🍲','Wearing socks 🧦'],
+        correctItems:['Drinking water 🚰','Brushing teeth 🪥','Wearing socks 🧦']
+      }),
+      q('gp_d2_q2','MATCH','Match each action to the body part used to perform it:',{
+        pairs:[{left:'Listening to music 🎧',right:'Ears 👂'},{left:'Writing with pencil ✍️',right:'Hand ✋'},{left:'Riding bicycle 🚲',right:'Feet / Legs 👣'},{left:'Smelling rose 🌹',right:'Nose 👃'}]
+      }),
+      q('gp_d2_q3','MCQ','Family Member Practice: Select the picture of a FAMILY MEMBER!',{
+        options:['Grandfather with walking stick 👴','Firefighter with axe 🧑‍🚒','Doctor with stethoscope 👩‍⚕️'],answer:'Grandfather with walking stick 👴'
+      }),
+      q('gp_d2_q4','CIRCLE_FIND','Helping Family: Tap all pictures where the child is HELPING their family!',{
+        items:['Helping wash dishes 🧼','Helping hang clothes 👕','Pulling plants out 🪴','Throwing pillows 🛌'],
+        correctItems:['Helping wash dishes 🧼','Helping hang clothes 👕']
+      }),
+      q('gp_d2_q5','TRUE_FALSE','Sharing toys happily and playing together shows children being GOOD FRIENDS.',{
+        answer:true
+      }),
+      q('gp_d2_q6','MCQ','Which action shows BAD behavior with friends?',{
+        options:['Fighting and snatching a toy car 🚗','Sharing a ball happily 🏐','Playing together nicely 🛝'],answer:'Fighting and snatching a toy car 🚗'
+      }),
+      q('gp_d2_q7','ARRANGE','Order the good self-care routine from morning to night:',{
+        items:['Wake up in morning 🌅','Brush teeth 🪥','Drink water 🥛','Go to sleep 🌙'],
+        correctOrder:['Wake up in morning 🌅','Brush teeth 🪥','Drink water 🥛','Go to sleep 🌙']
+      }),
+      q('gp_d2_q8','MATCH','Match the body parts to their sense functions:',{
+        pairs:[{left:'Eyes 👀',right:'Seeing colors'},{left:'Ears 👂',right:'Hearing sounds'},{left:'Tongue 👅',right:'Tasting food'},{left:'Skin ✋',right:'Feeling soft/hard'}]
+      }),
+      q('gp_d2_q9','TEXT_HIGHLIGHT','Tap all family member words in the passage:',{
+        passage:'My grandfather and mother helped me at home.',correctWords:['grandfather','mother']
+      }),
+      q('gp_d2_q10','AUDIO_WRITE','Listen and write the good habit sentence:',{
+        spokenText:'Drink clean water and brush your teeth every day.',expectedAnswer:'Drink clean water and brush your teeth every day.',language:'en-IN'
       })
     ]
   }
