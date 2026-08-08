@@ -1299,12 +1299,178 @@ const FINAL_ART_WORKSHEETS = [
   }
 ];
 
+// ═════════════════════════════════════════════════════════════════════════════
+// DEVANSH SCHOOL ASSESSMENT TEST WORKSHEETS (From Reference Tests)
+// ═════════════════════════════════════════════════════════════════════════════
+
+const DEVANSH_TEST_WORKSHEETS = [
+  {
+    id: 'eng_devansh_001', subject: 'english', title: '🏫 English School Test & Animal Movements',
+    topic: 'School Formative Assessment 1', difficulty: 'medium', estimatedTime: 12,
+    description: 'Devansh’s school Formative Assessment test paper questions & animal movements vocabulary!',
+    questions: [
+      q('ep_d1_q1','MATCH','Match the uppercase letters to their lowercase from Devansh’s test!',{
+        pairs:[{left:'B',right:'b'},{left:'F',right:'f'},{left:'Q',right:'q'},{left:'W',right:'w'},{left:'M',right:'m'}]
+      }),
+      q('ep_d1_q2','WORD_FIRST_LETTER','___mpire (First letter from school test picture)',{
+        wordWithBlank:'___mpire',options:['u','e','o','i'],answer:'u',hint:'Umpire overseeing a match'
+      }),
+      q('ep_d1_q3','CIRCLE_FIND','Circle all the VOWELS from Devansh’s balloon test page!',{
+        items:['o','g','i','t','y','a','q','e','l','u'],correctItems:['o','i','a','e','u']
+      }),
+      q('ep_d1_q4','MCQ','Choose the correct article for elephant (from test):',{
+        options:['a elephant','an elephant','the elephant','two elephant'],answer:'an elephant'
+      }),
+      q('ep_d1_q5','MATCH','Match each animal to its movement (From learning chart)!',{
+        pairs:[{left:'Snake 🐍',right:'Slither (रेंगना)'},{left:'Frog 🐸',right:'Hop (उछलना)'},{left:'Horse 🐴',right:'Gallop (सरपट)'},{left:'Lion 🦁',right:'Prowl (दबे पाँव)'},{left:'Bird 🐦',right:'Fly (उड़ना)'}]
+      }),
+      q('ep_d1_q6','MATCH','Match the picture words from CVC test sheet:',{
+        pairs:[{left:'Pan 🍳',right:'pan'},{left:'Leg 🦵',right:'leg'},{left:'Fan 🪭',right:'fan'},{left:'Keg 🛢️',right:'keg'},{left:'Bed 🛏️',right:'bed'}]
+      }),
+      q('ep_d1_q7','WORD_BUILD','Tap letters to build word JAM.',{
+        letterPool:['J','A','M','C','B','O'],answer:'JAM'
+      }),
+      q('ep_d1_q8','UNSCRAMBLE','Unscramble word for headwear in test grid:',{
+        scrambled:['A','H','T'],answer:'HAT',hint:'Hat'
+      }),
+      q('ep_d1_q9','TEXT_HIGHLIGHT','Tap all CVC words from Devansh’s test page:',{
+        passage:'The hen saw a pen a jet and a web in the den near a peg.',
+        correctWords:['hen','saw','pen','jet','web','den','peg']
+      }),
+      q('ep_d1_q10','AUDIO_WRITE','Listen and write the spelling bee word:',{
+        spokenText:'rainbow',expectedAnswer:'rainbow',language:'en-IN',hint:'Colors in the sky after rain'
+      })
+    ]
+  },
+  {
+    id: 'hindi_devansh_001', subject: 'hindi', title: '🏫 हिंदी जुलाई मासिक मूल्यांकन (July Test Paper)',
+    topic: 'मासिक मूल्यांकन प्रश्न पत्र', difficulty: 'medium', estimatedTime: 12,
+    description: 'देवांश् के स्कूल का जुलाई परीक्षा प्रश्न पत्र — श्रुतलेख, स्वर-व्यंजन श्रृंखला व चित्र नाम!',
+    questions: [
+      q('hp_d1_q1','SEQUENCE_NEXT','स्वर की श्रृंखला पूरी लिखो (अ से ऊ):',{
+        given:['अ','आ','इ'],blanks:3,answers:['ई','उ','ऊ']
+      }),
+      q('hp_d1_q2','SEQUENCE_NEXT','क वर्ग का क्रम पूरा करो:',{
+        given:['क','ख','ग'],blanks:2,answers:['घ','ङ']
+      }),
+      q('hp_d1_q3','DRAG_SLOT','अक्षर जोड़कर शब्द बनाओ (प्रश्न पत्र से):',{
+        slots:[{label:'न + ल =',answer:'नल'},{label:'ब + स =',answer:'बस'},{label:'स + ड़ + क =',answer:'सड़क'}],
+        tilePool:['नल','बस','सड़क','घर','जल']
+      }),
+      q('hp_d1_q4','PICTURE_WRITE','चित्र देख कर नाम लिखो (Fire):',{
+        picture:'🔥',text:'चित्र देख कर नाम लिखो (आग)',expectedAnswers:['आग','aag']
+      }),
+      q('hp_d1_q5','AUDIO_WRITE','श्रुतलेख (Dictation): सुनकर शब्द लिखो!',{
+        spokenText:'शरबत',expectedAnswer:'शरबत',language:'hi-IN',hint:'ठंडा शरबत'
+      }),
+      q('hp_d1_q6','MCQ','आ की मात्रा का सही शब्द चुनो (छाता):',{
+        options:['छाता','छता','छात','छाात'],answer:'छाता'
+      }),
+      q('hp_d1_q7','MATCH','चित्र को सही नाम से मिलाओ:',{
+        pairs:[{left:'🚰',right:'नल'},{left:'💧',right:'जल'},{left:'🏠',right:'घर'},{left:'🥭',right:'आम'}]
+      }),
+      q('hp_d1_q8','CIRCLE_FIND','परीक्षा प्रश्न 1 के श्रुतलेख शब्दों पर गोला लगाओ!',{
+        items:['बस','नल','गरम','शरबत','सड़क','अचकन','हाथ','ताला'],
+        correctItems:['बस','नल','गरम','शरबत','सड़क']
+      }),
+      q('hp_d1_q9','UNSCRAMBLE','वर्ण सही क्रम में लगाकर शब्द बनाओ:',{
+        scrambled:['श','द','ह'],answer:'शहद',hint:'मीठा शहद'
+      }),
+      q('hp_d1_q10','TEXT_HIGHLIGHT','वाक्य में से अमात्रिक शब्द चुनो:',{
+        passage:'शरबत पीकर बस पर चढ़ और नल बंद कर।',
+        correctWords:['शरबत','बस','नल']
+      })
+    ]
+  },
+  {
+    id: 'ga_devansh_001', subject: 'ga', title: '🏫 EVS School Test: Sense Organs & Habits',
+    topic: 'General Awareness FA-1', difficulty: 'medium', estimatedTime: 12,
+    description: 'Devansh’s EVS test: Sense organs, odd one out, good habits & body shadows!',
+    questions: [
+      q('gp_d1_q1','MATCH','Match picture activity to correct sense organ (From EVS Test)!',{
+        pairs:[{left:'Seeing Telescope 🔭',right:'Eyes 👀'},{left:'Music Headphones 🎧',right:'Ears 👂'},{left:'Smelling Flower 🌹',right:'Nose 👃'},{left:'Lollipop Taste 🍭',right:'Tongue 👅'},{left:'Holding Ball 🏀',right:'Skin / Hand ✋'}]
+      }),
+      q('gp_d1_q2','CIRCLE_FIND','Circle all the GOOD HABITS from test paper! (Tick ✓)',{
+        items:['Eating junk food','Washing hands','Playing outdoors','Watching screen close','Brushing teeth','Eating in bed'],
+        correctItems:['Washing hands','Playing outdoors','Brushing teeth']
+      }),
+      q('gp_d1_q3','MCQ','Look at test row: Which item is the ODD ONE OUT for TASTE?',{
+        options:['Rock (hard texture)','Chocolate (sweet taste)','Banana (sweet taste)','Apple (sweet taste)'],
+        answer:'Rock (hard texture)'
+      }),
+      q('gp_d1_q4','MATCH','Match body parts to their correct SHADOW!',{
+        pairs:[{left:'Head 👤',right:'Head Shadow 👤'},{left:'Hand ✋',right:'Hand Shadow ✋'},{left:'Foot 🦶',right:'Foot Shadow 🦶'},{left:'Ear 👂',right:'Ear Shadow 👂'}]
+      }),
+      q('gp_d1_q5','MCQ','Circle the correct family member (From test page A):',{
+        options:['Grandfather','Father','Brother','Uncle'],answer:'Grandfather'
+      }),
+      q('gp_d1_q6','TRUE_FALSE','Eating chocolate in bed before sleep is a GOOD habit.',{
+        answer:false
+      }),
+      q('gp_d1_q7','ARRANGE','Put daily morning routine in correct order:',{
+        items:['Take a bath 🛁','Eat breakfast 🥣','Brush teeth 🪥','Wake up 🌅','Go to school 🏫'],
+        correctOrder:['Wake up 🌅','Brush teeth 🪥','Take a bath 🛁','Eat breakfast 🥣','Go to school 🏫']
+      }),
+      q('gp_d1_q8','MATCH','Match animals to their homes (From syllabus):',{
+        pairs:[{left:'Bird 🐦',right:'Nest 🪺'},{left:'Lion 🦁',right:'Den 🪨'},{left:'Rabbit 🐇',right:'Burrow 🕳️'},{left:'Dog 🐶',right:'Kennel 🏠'}]
+      }),
+      q('gp_d1_q9','TEXT_HIGHLIGHT','Tap all 5 sense organs in the passage:',{
+        passage:'My eyes see colors my ears hear songs my nose smells flowers and my tongue tastes fruit.',
+        correctWords:['eyes','ears','nose','tongue']
+      }),
+      q('gp_d1_q10','AUDIO_WRITE','Listen and write the daily habit sentence:',{
+        spokenText:'Clean your room and finish your homework.',
+        expectedAnswer:'Clean your room and finish your homework.',language:'en-IN'
+      })
+    ]
+  },
+  {
+    id: 'math_devansh_001', subject: 'maths', title: '🏫 Maths School Test Paper & Concepts',
+    topic: 'Maths Term Exam', difficulty: 'medium', estimatedTime: 12,
+    description: 'Missing numbers, Greater/Less than, Tables 0-5, Tens & Ones from Devansh’s school exam!',
+    questions: [
+      q('mp_d1_q1','SEQUENCE_NEXT','Complete missing numbers train (15 to 20):',{
+        given:['15','16'],blanks:4,answers:['17','18','19','20']
+      }),
+      q('mp_d1_q2','MCQ','Select the correct comparison sign: 45 ___ 32',{
+        options:['>','<','='],answer:'>'
+      }),
+      q('mp_d1_q3','ARRANGE','Arrange numbers in ASCENDING order (Smallest to Biggest):',{
+        items:['89','12','45','28','67'],correctOrder:['12','28','45','67','89']
+      }),
+      q('mp_d1_q4','MATCH','Match numbers to Number Names from test syllabus:',{
+        pairs:[{left:'11',right:'Eleven'},{left:'15',right:'Fifteen'},{left:'20',right:'Twenty'},{left:'18',right:'Eighteen'},{left:'12',right:'Twelve'}]
+      }),
+      q('mp_d1_q5','DRAG_SLOT','Table Multiplication (Tables 2 to 5):',{
+        slots:[{label:'2 × 5 =',answer:'10'},{label:'3 × 4 =',answer:'12'},{label:'5 × 3 =',answer:'15'}],
+        tilePool:['10','12','15','8','20']
+      }),
+      q('mp_d1_q6','CIRCLE_FIND','Circle the BIGGEST number from Devansh’s math test list!',{
+        items:['8','42','99','17','63'],correctItems:['99']
+      }),
+      q('mp_d1_q7','WORD_BUILD','Tap letters to spell Number Name 12:',{
+        letterPool:['T','W','E','L','V','E','S','X'],answer:'TWELVE'
+      }),
+      q('mp_d1_q8','MCQ','Concept test: Which object is HEAVY?',{
+        options:['Big Elephant 🐘','Feather 🪶','Paper 📄','Leaf 🍃'],answer:'Big Elephant 🐘'
+      }),
+      q('mp_d1_q9','SEQUENCE_PREV','Backward Counting: Write 3 numbers before 48.',{
+        given:['48','49','50'],blanks:3,answers:['45','46','47']
+      }),
+      q('mp_d1_q10','GROUPS_OF_TEN','How many Groups of Tens make 40?',{
+        targetNumber:40,itemIcon:'🔴',groupSize:10,totalGroups:4,answer:4
+      })
+    ]
+  }
+];
+
 if (typeof ALL_WORKSHEETS !== 'undefined') {
   ALL_WORKSHEETS.push(
     ...FINAL_ENG_WORKSHEETS,
     ...FINAL_MATH_WORKSHEETS,
     ...FINAL_HINDI_WORKSHEETS,
     ...FINAL_GA_WORKSHEETS,
-    ...FINAL_ART_WORKSHEETS
+    ...FINAL_ART_WORKSHEETS,
+    ...DEVANSH_TEST_WORKSHEETS
   );
 }

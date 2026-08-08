@@ -711,7 +711,15 @@ function renderCurrentQuestion() {
         ${renderWorksheetVideos(worksheet.videos)}
         <div class="question-card" id="q-card">
           <div class="question-text${isHindi ? ' hindi' : ''}">${esc(question.text)}</div>
-          ${question.hint ? `<div style="font-size:12px;color:#7A7A8A;margin-top:6px;font-style:italic">💡 ${esc(question.hint)}</div>` : ''}
+          ${question.hint ? `
+            <div style="margin-top:6px">
+              <button class="btn-hint-toggle" onclick="toggleHint(this)" style="background:rgba(255,149,0,0.1);border:1px solid rgba(255,149,0,0.3);color:#D97706;font-size:11px;font-weight:700;cursor:pointer;padding:3px 8px;border-radius:12px;display:inline-flex;align-items:center;gap:4px">
+                💡 Show Hint
+              </button>
+              <div class="hint-content-box" style="display:none;font-size:12px;color:#7A7A8A;margin-top:6px;font-style:italic;background:#FFFBEB;padding:6px 10px;border-radius:8px;border-left:3px solid #F59E0B">
+                💡 ${esc(question.hint)}
+              </div>
+            </div>` : ''}
         </div>
 
         ${qBody}
@@ -2707,10 +2715,31 @@ function drawSheetLines(ctx, W, H) {
 // ══════════════════════════════════════════════════════════════
 // TEXT_HIGHLIGHT — Read passage, tap words to circle them
 // ══════════════════════════════════════════════════════════════
+function isCVCWord(word) {
+  const w = word.toLowerCase().replace(/[^a-z]/g, '');
+  if (w.length !== 3) return false;
+  const vowels = ['a','e','i','o','u'];
+  const isV = c => vowels.includes(c);
+  return !isV(w[0]) && isV(w[1]) && !isV(w[2]);
+}
+
+function getEffectiveCorrectWords(q) {
+  let list = (q.correctWords || []).map(w => w.toLowerCase());
+  if (q.text && q.text.toUpperCase().includes('CVC') && q.passage) {
+    const passageWords = q.passage.split(/\s+/).map(t => t.toLowerCase().replace(/[^a-z]/g, ''));
+    passageWords.forEach(w => {
+      if (w && isCVCWord(w) && !list.includes(w)) {
+        list.push(w);
+      }
+    });
+  }
+  return list;
+}
+
 function renderTextHighlight(q) {
   const passage = q.passage || '';
-  const correct = (q.correctWords || []).map(w => w.toLowerCase());
-  window._thState = { highlighted: new Set(), correctWords: q.correctWords || [] };
+  const correct = getEffectiveCorrectWords(q);
+  window._thState = { highlighted: new Set(), correctWords: correct };
 
   const words = passage.split(/(\s+)/).map((token, i) => {
     const clean = token.trim().toLowerCase().replace(/[^a-z\u0900-\u097f]/g, '');
@@ -2739,6 +2768,14 @@ function thToggleWord(el, word) {
   state.player.selectedOption = ths.highlighted.size > 0 ? 'th' : null;
   const btn = document.getElementById('btn-check');
   if (btn) btn.disabled = ths.highlighted.size === 0;
+}
+
+function toggleHint(btn) {
+  const box = btn.nextElementSibling;
+  if (!box) return;
+  const isHidden = box.style.display === 'none' || !box.style.display;
+  box.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? '💡 Hide Hint' : '💡 Show Hint';
 }
 
 // ══════════════════════════════════════════════════════════════
