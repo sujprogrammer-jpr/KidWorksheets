@@ -872,9 +872,11 @@ a {
    ══════════════════════════════════════════════════════════════ */
 .player-screen {
   background: var(--light-bg);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   font-family: 'Nunito', sans-serif;
 }
 
@@ -982,7 +984,9 @@ a {
 
 .player-body {
   flex: 1;
-  padding: 6px var(--sp-3) 58px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px var(--sp-3) 64px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1311,13 +1315,13 @@ a {
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 90;
-  background: rgba(255, 255, 255, 0.96);
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--light-border);
-  padding: 5px var(--sp-3) calc(5px + env(safe-area-inset-bottom, 0px));
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+  padding: 4px var(--sp-3) max(6px, env(safe-area-inset-bottom, 6px));
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
   display: flex;
   justify-content: center;
 }
@@ -2406,6 +2410,25 @@ a {
 
   .dashboard-stats {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .player-body {
+    padding: 6px 10px 60px 10px;
+    gap: 4px;
+  }
+  .question-card {
+    padding: 8px 10px;
+  }
+  .mcq-option {
+    padding: 6px 10px;
+    min-height: 34px;
+    font-size: 13px;
+  }
+  .player-actions .btn {
+    height: 36px;
+    font-size: 13px;
   }
 }
 
