@@ -227,6 +227,7 @@ function renderBuilder(editId) {
         sheetType:   activeSheetType,
         comments:    activeComments,
         sampleText:  activeSample,
+        videos:      existing.videos ? JSON.parse(JSON.stringify(existing.videos)) : [],
         questions:   qs,
         addingType:  'MCQ',
         editingIndex: null,
@@ -235,12 +236,30 @@ function renderBuilder(editId) {
   } else if (!state.builder || state.builder.editId !== null) {
     state.builder = {
       editId: null, title: '', subject: 'english',
-      difficulty: 'easy', description: '', sheetType: '4-line', comments: '', sampleText: '', questions: [], addingType: 'MCQ',
+      difficulty: 'easy', description: '', sheetType: '4-line', comments: '', sampleText: '', videos: [], questions: [], addingType: 'MCQ',
       editingIndex: null,
     };
   }
   _audioDataUrl   = null;
   _matchPairCount = 4;
+  _renderBuilderUI();
+}
+
+function builderAddVideo() {
+  const titleEl = document.getElementById('new-video-title');
+  const urlEl = document.getElementById('new-video-url');
+  if (!urlEl) return;
+  const title = titleEl ? titleEl.value.trim() : '';
+  const url = urlEl.value.trim();
+  if (!url) { showToast('Please enter a Video URL', ''); return; }
+  if (!state.builder.videos) state.builder.videos = [];
+  state.builder.videos.push({ id: `v_${Date.now()}`, title: title || 'Learning Video', url: url });
+  _renderBuilderUI();
+}
+
+function builderDeleteVideo(idx) {
+  if (!state.builder || !state.builder.videos) return;
+  state.builder.videos.splice(idx, 1);
   _renderBuilderUI();
 }
 
@@ -313,6 +332,38 @@ function _renderBuilderUI() {
             <label for="ws-desc">Description / Instructions (optional)</label>
             <input id="ws-desc" class="builder-input" placeholder="e.g. Write letters A to Z in capital letters"
               value="${esc(b.description)}" oninput="state.builder.description=this.value">
+          </div>
+        </div>
+
+        <!-- ── Learning Video Tutorials ──────────────── -->
+        <div class="builder-meta-card" style="margin-top:14px">
+          <div style="font-size:15px;font-weight:800;color:var(--light-text-primary);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+            🎥 Learning Video Tutorials <span class="builder-q-badge">${(b.videos || []).length}</span>
+          </div>
+          <div style="font-size:12px;color:var(--light-text-secondary);margin-bottom:12px">
+            Add YouTube or CDN MP4 tutorial videos for kids to watch before or while solving the worksheet.
+          </div>
+
+          ${(b.videos || []).length > 0 ? `
+            <div class="builder-video-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+              ${b.videos.map((v, i) => `
+                <div class="builder-video-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--light-bg);border:1px solid var(--light-border);border-radius:10px;gap:8px">
+                  <div style="min-width:0;flex:1">
+                    <div style="font-weight:700;font-size:13px;color:var(--light-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🎥 ${esc(v.title || 'Video Tutorial')}</div>
+                    <div style="font-size:11px;color:var(--light-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.url)}</div>
+                  </div>
+                  <button type="button" class="btn btn-sm" onclick="builderDeleteVideo(${i})" style="background:#FF5C5C;color:white;border:none;border-radius:8px;padding:4px 10px;cursor:pointer">🗑</button>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          <div style="display:flex;flex-direction:column;gap:8px;background:var(--light-bg);padding:12px;border-radius:12px;border:1px solid var(--light-border)">
+            <input id="new-video-title" class="builder-input" placeholder="Video Title (e.g. Phonics Vowels Tutorial)" style="font-size:13px">
+            <div style="display:flex;gap:8px">
+              <input id="new-video-url" class="builder-input" placeholder="Video URL (YouTube link or MP4 link)" style="flex:1;font-size:13px">
+              <button type="button" class="btn btn-primary btn-sm" onclick="builderAddVideo()" style="white-space:nowrap">+ Add Video</button>
+            </div>
           </div>
         </div>
 
@@ -1346,6 +1397,7 @@ function saveBuilderWorksheet() {
     topic:        'Custom',
     difficulty:   b.difficulty,
     description:  b.description.trim(),
+    videos:       b.videos || [],
     estimatedTime: Math.max(5, b.questions.length * 2),
     questions:    b.questions,
     isTuitionSheet: b.subject === 'tuition',

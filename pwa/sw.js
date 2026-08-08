@@ -1,7 +1,7 @@
 // KidWorksheets Service Worker v1.0
 // Provides offline caching for all app assets
 
-const CACHE_NAME = 'kidworksheets-v3';
+const CACHE_NAME = 'kidworksheets-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -18,11 +18,9 @@ const ASSETS_TO_CACHE = [
 
 // ── Install: cache all core assets ──────────────────────────────────────────
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching core assets');
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
   );
 });
 
@@ -33,47 +31,25 @@ self.addEventListener('activate', (event) => {
       Promise.all(
         cacheNames
           .filter((name) => name !== CACHE_NAME)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
+          .map((name) => caches.delete(name))
       )
     ).then(() => self.clients.claim())
   );
 });
 
-// ── Fetch: cache-first for app assets, network-first for fonts ───────────────
+// ── Fetch: network-first with cache fallback ────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-
-  // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // Network-first for Google Fonts (they update)
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // Cache-first for all app assets
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-      return fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
         if (response && response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });

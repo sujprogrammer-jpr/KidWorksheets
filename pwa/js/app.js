@@ -551,6 +551,77 @@ function submitTuitionWorksheet() {
   }, 1200);
 }
 
+let _activeVideoIndex = 0;
+
+function parseVideoEmbedUrl(url) {
+  if (!url) return { type: 'none' };
+  const trimmed = url.trim();
+  const ytMatch = trimmed.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (ytMatch && ytMatch[1]) {
+    return { type: 'youtube', embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}?rel=0` };
+  }
+  return { type: 'html5', url: trimmed };
+}
+
+function selectWorksheetVideo(idx) {
+  _activeVideoIndex = idx;
+  const container = document.getElementById('worksheet-video-wrap');
+  const videos = state.player && state.player.worksheet ? state.player.worksheet.videos : null;
+  if (container && videos && videos[idx]) {
+    container.innerHTML = renderSingleVideoContent(videos[idx]);
+  }
+  document.querySelectorAll('.video-tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === idx);
+  });
+}
+
+function renderSingleVideoContent(v) {
+  const parsed = parseVideoEmbedUrl(v.url);
+  if (parsed.type === 'youtube') {
+    return `<div class="video-iframe-wrap">
+      <iframe src="${parsed.embedUrl}" title="${esc(v.title || 'Video Tutorial')}" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>
+    </div>`;
+  }
+  return `<div class="video-html5-wrap">
+    <video controls poster="" style="width:100%;max-height:320px;border-radius:12px;background:#000">
+      <source src="${esc(parsed.url)}" type="video/mp4">
+      Your browser does not support HTML5 video playback.
+    </video>
+  </div>`;
+}
+
+function renderWorksheetVideos(videos) {
+  if (!videos || !Array.isArray(videos) || videos.length === 0) return '';
+  if (_activeVideoIndex >= videos.length) _activeVideoIndex = 0;
+  const currentVideo = videos[_activeVideoIndex] || videos[0];
+
+  const tabsHtml = videos.length > 1 ? `
+    <div class="video-tabs">
+      ${videos.map((v, i) => `
+        <button class="video-tab-btn ${i === _activeVideoIndex ? 'active' : ''}"
+          onclick="selectWorksheetVideo(${i})" id="vtab-${i}">
+          🎥 Tutorial ${i + 1}
+        </button>
+      `).join('')}
+    </div>
+  ` : '';
+
+  return `
+    <div class="worksheet-video-card" id="ws-video-card">
+      <div class="video-card-header">
+        <span class="video-card-badge">🎥 Video Tutorial</span>
+        <span class="video-card-title">${esc(currentVideo.title || 'Learning Video Tutorial')}</span>
+      </div>
+      ${tabsHtml}
+      <div id="worksheet-video-wrap">
+        ${renderSingleVideoContent(currentVideo)}
+      </div>
+    </div>
+  `;
+}
+
 function prevQuestion() {
   if (!state.player || !state.player.worksheet) return navigate('/child');
   const { worksheet, questionIndex } = state.player;
@@ -630,18 +701,15 @@ function renderCurrentQuestion() {
           <button class="player-back-btn" onclick="prevQuestion()" id="btn-back" title="Back">◀ Back</button>
           <div class="player-activity-name" title="${esc(worksheet.title || 'Worksheet')}">${esc(worksheet.title || 'Worksheet')}</div>
           <div class="player-top-right">
-            <span class="player-q-counter">${questionIndex + 1} of ${total} Question</span>
+            <span class="player-q-counter">(${questionIndex + 1}/${total}) [${question.type.replace('_',' ')}]</span>
             <button class="player-quit-btn" onclick="confirmQuit()" id="btn-quit" title="Close">✕</button>
           </div>
-        </div>
-        <div class="player-progress-bar">
-          <div class="player-progress-fill" style="width:${pct}%"></div>
         </div>
       </div>
 
       <div class="player-body">
+        ${renderWorksheetVideos(worksheet.videos)}
         <div class="question-card" id="q-card">
-          <div class="question-type-badge">${question.type.replace('_',' ')}</div>
           <div class="question-text${isHindi ? ' hindi' : ''}">${esc(question.text)}</div>
           ${question.hint ? `<div style="font-size:12px;color:#7A7A8A;margin-top:6px;font-style:italic">💡 ${esc(question.hint)}</div>` : ''}
         </div>

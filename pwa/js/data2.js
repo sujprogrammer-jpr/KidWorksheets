@@ -46,6 +46,9 @@ const ENG_P2_WORKSHEETS = [
     id: 'eng_p2_002', subject: 'english', title: 'Words and Sounds Challenge',
     topic: 'Phonics and Word Building', difficulty: 'medium', estimatedTime: 12,
     description: 'Blends, digraphs, and vowel sounds in one worksheet!',
+    videos: [
+      { id: 'v1', title: '📺 Phonics Blends & Digraphs Video Lesson', url: 'https://www.youtube.com/watch?v=R087lYrRtgY' }
+    ],
     questions: [
       q('ep2e2q1','MATCH','Match each digraph to a word that uses it.',{
         pairs:[{left:'sh',right:'shell'},{left:'ch',right:'chair'},{left:'th',right:'three'},{left:'wh',right:'whale'}]
@@ -65,7 +68,7 @@ const ENG_P2_WORKSHEETS = [
         spokenText:'umbrella',expectedAnswer:'umbrella',language:'en-IN'
       }),
       q('ep2e2q6','UNSCRAMBLE','Unscramble to find an animal!',{scrambled:['F','R','O','G'],answer:'FROG',hint:'Lives near a pond!'}),
-      q('ep2e2q7','WORD_BUILD','Build the word for BUTTERFLY.',{letterPool:['B','U','T','E','R','F','L','Y','X'],answer:'BUTTERFLY'}),
+      q('ep2e2q7','WORD_BUILD','Build the word for BUTTERFLY.',{letterPool:['B','U','T','T','E','R','F','L','Y','X'],answer:'BUTTERFLY'}),
       q('ep2e2q8','MCQ','Which word rhymes with CAKE?',{options:['lake','back','cat','bed'],answer:'lake'}),
       q('ep2e2q9','SEQUENCE_NEXT','Continue the alphabet pattern.',{given:['F','G','H'],blanks:3,answers:['I','J','K']}),
       q('ep2e2q10','TRUE_FALSE','The word "cheese" starts with a digraph.',{answer:true,hint:'ch is a digraph!'}),

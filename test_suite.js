@@ -78,6 +78,8 @@ const APP_FUNS = [
   'function vsPlaceInBin',
   'function toggleAudioPlay',
   'function initAudioWriteCanvas',
+  'function renderWorksheetVideos',
+  'function parseVideoEmbedUrl',
 ];
 APP_FUNS.forEach(fn => {
   appJs.includes(fn) ? ok(fn) : fail('MISSING in app.js: '+fn);

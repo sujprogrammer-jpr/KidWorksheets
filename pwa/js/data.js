@@ -737,6 +737,9 @@ const INTERACTIVE_WORKSHEETS = [
     id: 'int_eng_002', subject: 'english', title: '✨ Spell the Word!',
     topic: 'Interactive', difficulty: 'easy', estimatedTime: 10,
     description: 'Build words by tapping the correct letters in order!',
+    videos: [
+      { id: 'v1', title: '🎵 Learn Animal Spellings & Phonics Tutorial', url: 'https://www.youtube.com/watch?v=gT5j_bY4g8c' }
+    ],
     questions: [
       q('ie2q1', 'WORD_BUILD', 'Tap the letters to spell the word for this picture! 🐕', {
         picture: '🐕', letterPool: ['D', 'O', 'X', 'G', 'A'], answer: 'DOG'
@@ -745,7 +748,7 @@ const INTERACTIVE_WORKSHEETS = [
         picture: '🐱', letterPool: ['C', 'A', 'T', 'E', 'B'], answer: 'CAT'
       }),
       q('ie2q3', 'WORD_BUILD', 'Tap the letters to spell the word for this picture! 🐘', {
-        picture: '🐘', letterPool: ['E', 'L', 'A', 'P', 'H', 'N', 'T', 'O'], answer: 'ELEPHANT'
+        picture: '🐘', letterPool: ['E', 'L', 'E', 'P', 'H', 'A', 'N', 'T', 'O'], answer: 'ELEPHANT'
       }),
       q('ie2q4', 'WORD_BUILD', 'Tap the letters to spell the word for this picture! 🦁', {
         picture: '🦁', letterPool: ['L', 'I', 'O', 'N', 'A', 'E'], answer: 'LION'
