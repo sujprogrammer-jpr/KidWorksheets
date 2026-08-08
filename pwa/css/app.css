@@ -285,10 +285,7 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-top: max(calc(env(safe-area-inset-top, 0px) + 12px), 20px);
-  padding-bottom: var(--sp-6);
-  padding-left: var(--sp-6);
-  padding-right: var(--sp-6);
+  padding: 20px var(--sp-6) var(--sp-6);
   background: linear-gradient(135deg, #0F0F1A 0%, #1A1A2E 40%, #252540 100%);
   position: relative;
   overflow: hidden;
@@ -507,10 +504,7 @@ a {
 
 .child-header {
   background: white;
-  padding-top: max(env(safe-area-inset-top, 0px), 10px);
-  padding-bottom: 10px;
-  padding-left: var(--sp-4);
-  padding-right: var(--sp-4);
+  padding: 10px var(--sp-4);
   display: flex;
   align-items: center;
   gap: var(--sp-3);
@@ -569,10 +563,7 @@ a {
 
 .child-home-hero {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  padding-top: max(calc(env(safe-area-inset-top, 0px) + 12px), 20px);
-  padding-bottom: var(--sp-6);
-  padding-left: var(--sp-6);
-  padding-right: var(--sp-6);
+  padding: 16px var(--sp-6) var(--sp-6);
   position: relative;
   overflow: hidden;
 }
@@ -580,7 +571,7 @@ a {
 .child-home-hero::before {
   content: '⭐🌟✨';
   position: absolute;
-  top: max(env(safe-area-inset-top, 0px), 12px);
+  top: 12px;
   right: 16px;
   font-size: 20px;
   opacity: 0.3;
@@ -896,10 +887,7 @@ a {
 
 .player-top-bar {
   background: white;
-  padding-top: max(env(safe-area-inset-top, 0px), 6px);
-  padding-bottom: 6px;
-  padding-left: var(--sp-4);
-  padding-right: var(--sp-4);
+  padding: 6px var(--sp-4);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
@@ -1641,10 +1629,7 @@ a {
 
 .mentor-header {
   background: var(--dark-surface-1);
-  padding-top: max(env(safe-area-inset-top, 0px), 12px);
-  padding-bottom: 12px;
-  padding-left: var(--sp-6);
-  padding-right: var(--sp-6);
+  padding: 12px var(--sp-6);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2426,6 +2411,31 @@ a {
 
   .dashboard-stats {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── INSTALLED PWA / STANDALONE APP MODE (Notch Clearance) ──── */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .landing {
+    padding-top: max(calc(16px + env(safe-area-inset-top, 0px)), 44px);
+  }
+  .child-header {
+    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 44px);
+  }
+  .child-home-hero {
+    padding-top: max(calc(12px + env(safe-area-inset-top, 0px)), 44px);
+  }
+  .child-home-hero::before {
+    top: max(env(safe-area-inset-top, 0px), 12px);
+  }
+  .player-top-bar {
+    padding-top: max(calc(6px + env(safe-area-inset-top, 0px)), 44px);
+  }
+  .mentor-header {
+    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 44px);
+  }
+  .tracing-top-bar {
+    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 44px);
   }
 }
 

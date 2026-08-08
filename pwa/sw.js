@@ -1,7 +1,7 @@
 // KidWorksheets Service Worker v1.0
 // Provides offline caching for all app assets
 
-const CACHE_NAME = 'kidworksheets-v15';
+const CACHE_NAME = 'kidworksheets-v16';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
