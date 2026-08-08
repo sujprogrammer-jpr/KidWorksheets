@@ -2414,34 +2414,6 @@ a {
   }
 }
 
-/* ── INSTALLED PWA / STANDALONE APP MODE (Notch Clearance) ──── */
-@media (display-mode: standalone), (display-mode: fullscreen) {
-  .landing {
-    padding-top: max(calc(16px + env(safe-area-inset-top, 0px)), 44px);
-  }
-  .child-header {
-    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 44px);
-  }
-  .child-home-hero {
-    padding-top: max(calc(12px + env(safe-area-inset-top, 0px)), 44px);
-  }
-  .child-home-hero::before {
-    top: max(env(safe-area-inset-top, 0px), 12px);
-  }
-  .player-top-bar {
-    padding-top: max(calc(6px + env(safe-area-inset-top, 0px)), 44px);
-  }
-  .mentor-header {
-    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 44px);
-  }
-  .tracing-top-bar {
-    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 44px);
-  }
-  .print-toolbar {
-    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 44px);
-  }
-}
-
 @media (max-width: 600px) {
   .player-body {
     padding: 6px 10px 60px 10px;
@@ -5754,4 +5726,35 @@ a {
   border-radius: var(--r-lg);
   overflow: hidden;
   background: #000;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INSTALLED PWA / STANDALONE APP MODE (Camera Notch Clearance)
+   Placed at the very end of app.css so no later rules override!
+   ══════════════════════════════════════════════════════════════ */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .landing {
+    padding-top: max(calc(16px + env(safe-area-inset-top, 0px)), 48px) !important;
+  }
+  .child-header {
+    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 44px) !important;
+  }
+  .child-home-hero {
+    padding-top: max(calc(12px + env(safe-area-inset-top, 0px)), 48px) !important;
+  }
+  .child-home-hero::before {
+    top: max(env(safe-area-inset-top, 0px), 12px) !important;
+  }
+  .player-top-bar {
+    padding-top: max(calc(6px + env(safe-area-inset-top, 0px)), 44px) !important;
+  }
+  .mentor-header {
+    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 48px) !important;
+  }
+  .tracing-top-bar {
+    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 48px) !important;
+  }
+  .print-toolbar {
+    padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 48px) !important;
+  }
 }
