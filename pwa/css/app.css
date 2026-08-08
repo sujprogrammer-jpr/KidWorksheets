@@ -285,7 +285,7 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-top: max(calc(24px + env(safe-area-inset-top, 0px)), 56px);
+  padding-top: max(calc(env(safe-area-inset-top, 0px) + 12px), 20px);
   padding-bottom: var(--sp-6);
   padding-left: var(--sp-6);
   padding-right: var(--sp-6);
@@ -507,13 +507,13 @@ a {
 
 .child-header {
   background: white;
-  padding-top: max(calc(12px + env(safe-area-inset-top, 0px)), 52px);
-  padding-bottom: 12px;
-  padding-left: var(--sp-6);
-  padding-right: var(--sp-6);
+  padding-top: max(env(safe-area-inset-top, 0px), 10px);
+  padding-bottom: 10px;
+  padding-left: var(--sp-4);
+  padding-right: var(--sp-4);
   display: flex;
   align-items: center;
-  gap: var(--sp-4);
+  gap: var(--sp-3);
   border-bottom: 1px solid var(--light-border);
   box-shadow: var(--shadow-sm);
   position: sticky;
@@ -569,8 +569,8 @@ a {
 
 .child-home-hero {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  padding-top: max(calc(24px + env(safe-area-inset-top, 0px)), 56px);
-  padding-bottom: var(--sp-8);
+  padding-top: max(calc(env(safe-area-inset-top, 0px) + 12px), 20px);
+  padding-bottom: var(--sp-6);
   padding-left: var(--sp-6);
   padding-right: var(--sp-6);
   position: relative;
@@ -580,9 +580,9 @@ a {
 .child-home-hero::before {
   content: '⭐🌟✨';
   position: absolute;
-  top: max(calc(8px + env(safe-area-inset-top, 0px)), 48px);
+  top: max(env(safe-area-inset-top, 0px), 12px);
   right: 16px;
-  font-size: 24px;
+  font-size: 20px;
   opacity: 0.3;
   animation: sparkle 2s ease-in-out infinite;
 }
@@ -896,8 +896,8 @@ a {
 
 .player-top-bar {
   background: white;
-  padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 48px);
-  padding-bottom: 8px;
+  padding-top: max(env(safe-area-inset-top, 0px), 6px);
+  padding-bottom: 6px;
   padding-left: var(--sp-4);
   padding-right: var(--sp-4);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
@@ -1641,8 +1641,8 @@ a {
 
 .mentor-header {
   background: var(--dark-surface-1);
-  padding-top: max(calc(12px + env(safe-area-inset-top, 0px)), 52px);
-  padding-bottom: var(--sp-4);
+  padding-top: max(env(safe-area-inset-top, 0px), 12px);
+  padding-bottom: 12px;
   padding-left: var(--sp-6);
   padding-right: var(--sp-6);
   display: flex;
