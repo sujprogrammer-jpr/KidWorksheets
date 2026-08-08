@@ -285,7 +285,10 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: max(calc(var(--sp-6) + env(safe-area-inset-top, 0px)), 28px) var(--sp-6) var(--sp-6);
+  padding-top: max(calc(24px + env(safe-area-inset-top, 0px)), 56px);
+  padding-bottom: var(--sp-6);
+  padding-left: var(--sp-6);
+  padding-right: var(--sp-6);
   background: linear-gradient(135deg, #0F0F1A 0%, #1A1A2E 40%, #252540 100%);
   position: relative;
   overflow: hidden;
@@ -504,7 +507,10 @@ a {
 
 .child-header {
   background: white;
-  padding: max(calc(12px + env(safe-area-inset-top, 0px)), 16px) var(--sp-6) 12px;
+  padding-top: max(calc(12px + env(safe-area-inset-top, 0px)), 52px);
+  padding-bottom: 12px;
+  padding-left: var(--sp-6);
+  padding-right: var(--sp-6);
   display: flex;
   align-items: center;
   gap: var(--sp-4);
@@ -563,7 +569,10 @@ a {
 
 .child-home-hero {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  padding: max(calc(var(--sp-8) + env(safe-area-inset-top, 0px)), 32px) var(--sp-6) var(--sp-10);
+  padding-top: max(calc(24px + env(safe-area-inset-top, 0px)), 56px);
+  padding-bottom: var(--sp-8);
+  padding-left: var(--sp-6);
+  padding-right: var(--sp-6);
   position: relative;
   overflow: hidden;
 }
@@ -571,10 +580,10 @@ a {
 .child-home-hero::before {
   content: '⭐🌟✨';
   position: absolute;
-  top: 16px;
+  top: max(calc(8px + env(safe-area-inset-top, 0px)), 48px);
   right: 16px;
-  font-size: 32px;
-  opacity: 0.4;
+  font-size: 24px;
+  opacity: 0.3;
   animation: sparkle 2s ease-in-out infinite;
 }
 
@@ -887,7 +896,10 @@ a {
 
 .player-top-bar {
   background: white;
-  padding: max(calc(8px + env(safe-area-inset-top, 0px)), 12px) var(--sp-4) 8px;
+  padding-top: max(calc(8px + env(safe-area-inset-top, 0px)), 48px);
+  padding-bottom: 8px;
+  padding-left: var(--sp-4);
+  padding-right: var(--sp-4);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
@@ -1629,7 +1641,10 @@ a {
 
 .mentor-header {
   background: var(--dark-surface-1);
-  padding: max(calc(var(--sp-4) + env(safe-area-inset-top, 0px)), 16px) var(--sp-6) var(--sp-4);
+  padding-top: max(calc(12px + env(safe-area-inset-top, 0px)), 52px);
+  padding-bottom: var(--sp-4);
+  padding-left: var(--sp-6);
+  padding-right: var(--sp-6);
   display: flex;
   align-items: center;
   justify-content: space-between;
