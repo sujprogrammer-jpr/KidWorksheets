@@ -2930,13 +2930,11 @@ function renderPrint(worksheetId) {
 
     setApp(`
       <div class="print-view">
-        <div class="no-print" style="position:fixed;top:0;left:0;right:0;background:var(--dark-surface-1);
-          border-bottom:1px solid var(--dark-border);padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:200">
+        <div class="print-toolbar no-print">
           <button class="btn btn-dark btn-sm" onclick="navigate('/mentor/subject/${ws.subject}')" id="btn-back-print">← Back</button>
-          <span style="flex:1;color:var(--dark-text-primary);font-size:14px;font-weight:600">Print Preview: ${esc(ws.title)}</span>
+          <span class="mentor-header-title">Print Preview: ${esc(ws.title)}</span>
           <button class="btn btn-primary btn-sm" onclick="window.print()" id="btn-print">🖨 Print</button>
         </div>
-        <div style="height:60px" class="no-print"></div>
 
         <div class="print-header">
           <div class="print-school-name">${esc(getSchoolName())}</div>
@@ -2998,14 +2996,12 @@ function renderPrint(worksheetId) {
 
   setApp(`
     <div class="print-view">
-      <div class="no-print" style="position:fixed;top:0;left:0;right:0;background:var(--dark-surface-1);
-        border-bottom:1px solid var(--dark-border);padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:200">
+      <div class="print-toolbar no-print">
         <button class="btn btn-dark btn-sm" onclick="navigate('/mentor/subject/${ws.subject}')" id="btn-back-print">← Back</button>
-        <span style="flex:1;color:var(--dark-text-primary);font-size:14px;font-weight:600">Print Preview: ${esc(ws.title)}</span>
+        <span class="mentor-header-title">Print Preview: ${esc(ws.title)}</span>
         <button class="btn btn-dark btn-sm" onclick="toggleAnswerKey()" id="btn-tog-key">👁 Show Answer Key</button>
         <button class="btn btn-primary btn-sm" onclick="window.print()" id="btn-print">🖨 Print</button>
       </div>
-      <div style="height:60px" class="no-print"></div>
 
       <div class="print-header">
         <div class="print-school-name">${esc(getSchoolName())}</div>
