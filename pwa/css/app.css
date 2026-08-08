@@ -280,11 +280,12 @@ a {
    ══════════════════════════════════════════════════════════════ */
 .landing {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--sp-6);
+  padding: max(calc(var(--sp-6) + env(safe-area-inset-top, 0px)), 28px) var(--sp-6) var(--sp-6);
   background: linear-gradient(135deg, #0F0F1A 0%, #1A1A2E 40%, #252540 100%);
   position: relative;
   overflow: hidden;
@@ -503,7 +504,7 @@ a {
 
 .child-header {
   background: white;
-  padding: var(--sp-4) var(--sp-6);
+  padding: max(calc(12px + env(safe-area-inset-top, 0px)), 16px) var(--sp-6) 12px;
   display: flex;
   align-items: center;
   gap: var(--sp-4);
@@ -562,7 +563,7 @@ a {
 
 .child-home-hero {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  padding: var(--sp-8) var(--sp-6) var(--sp-10);
+  padding: max(calc(var(--sp-8) + env(safe-area-inset-top, 0px)), 32px) var(--sp-6) var(--sp-10);
   position: relative;
   overflow: hidden;
 }
@@ -886,7 +887,7 @@ a {
 
 .player-top-bar {
   background: white;
-  padding: max(4px, env(safe-area-inset-top, 4px)) var(--sp-4) 4px;
+  padding: max(calc(8px + env(safe-area-inset-top, 0px)), 12px) var(--sp-4) 8px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
@@ -1628,7 +1629,7 @@ a {
 
 .mentor-header {
   background: var(--dark-surface-1);
-  padding: var(--sp-5) var(--sp-6);
+  padding: max(calc(var(--sp-4) + env(safe-area-inset-top, 0px)), 16px) var(--sp-6) var(--sp-4);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2527,7 +2528,7 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: max(calc(10px + env(safe-area-inset-top, 0px)), 14px) 16px 12px;
   background: white;
   border-bottom: 1.5px solid #E8DFC8;
   position: sticky;
