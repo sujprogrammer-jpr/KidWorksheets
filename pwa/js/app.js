@@ -551,6 +551,30 @@ function submitTuitionWorksheet() {
   }, 1200);
 }
 
+function prevQuestion() {
+  if (!state.player || !state.player.worksheet) return navigate('/child');
+  const { worksheet, questionIndex } = state.player;
+  if (questionIndex > 0) {
+    state.player.questionIndex--;
+    state.player.selectedOption = null;
+    state.player.checked = false;
+    if (state.player.answers && state.player.answers.length > state.player.questionIndex) {
+      const last = state.player.answers.pop();
+      if (last && last.correct && state.player.score > 0) {
+        state.player.score--;
+      }
+    }
+    renderCurrentQuestion();
+  } else {
+    const sub = (worksheet && worksheet.subject) ? worksheet.subject : '';
+    if (sub) {
+      navigate(`/child/subject/${sub}`);
+    } else {
+      navigate('/child');
+    }
+  }
+}
+
 function renderCurrentQuestion() {
   const { worksheet, questionIndex, total } = state.player;
   const question = (worksheet.questions && worksheet.questions[questionIndex]) || { type: 'TUITION_CANVAS', text: worksheet.instruction || worksheet.title };
@@ -603,8 +627,12 @@ function renderCurrentQuestion() {
     <div class="player-screen${isHindi ? ' hindi-subject' : ''} screen">
       <div class="player-top-bar">
         <div class="player-top-row">
-          <div class="player-q-label">Question ${questionIndex + 1} of ${total}</div>
-          <button class="player-quit-btn" onclick="confirmQuit()" id="btn-quit">✕</button>
+          <button class="player-back-btn" onclick="prevQuestion()" id="btn-back" title="Back">◀ Back</button>
+          <div class="player-activity-name" title="${esc(worksheet.title || 'Worksheet')}">${esc(worksheet.title || 'Worksheet')}</div>
+          <div class="player-top-right">
+            <span class="player-q-counter">${questionIndex + 1} of ${total} Question</span>
+            <button class="player-quit-btn" onclick="confirmQuit()" id="btn-quit" title="Close">✕</button>
+          </div>
         </div>
         <div class="player-progress-bar">
           <div class="player-progress-fill" style="width:${pct}%"></div>
@@ -623,10 +651,12 @@ function renderCurrentQuestion() {
       </div>
 
       <div class="player-actions">
-        <button class="btn btn-primary btn-child btn-full" id="btn-check"
-          onclick="checkAnswer()" ${checkDisabled ? 'disabled' : ''}>
-          Check Answer ✓
-        </button>
+        <div class="player-actions-inner">
+          <button class="btn btn-primary btn-child btn-full" id="btn-check"
+            onclick="checkAnswer()" ${checkDisabled ? 'disabled' : ''}>
+            Check Answer ✓
+          </button>
+        </div>
       </div>
     </div>
   `);
@@ -985,7 +1015,14 @@ function endWorksheet() {
 }
 
 function confirmQuit() {
-  if (confirm('Quit this worksheet? Your progress will not be saved.')) navigate('/child');
+  const sub = (state.player && state.player.worksheet) ? state.player.worksheet.subject : '';
+  if (confirm('Quit this worksheet? Your progress will not be saved.')) {
+    if (sub) {
+      navigate(`/child/subject/${sub}`);
+    } else {
+      navigate('/child');
+    }
+  }
 }
 // ══════════════════════════════════════════════════════════════
 // SCREEN: RESULTS

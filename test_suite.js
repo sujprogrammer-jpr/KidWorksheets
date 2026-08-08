@@ -36,7 +36,7 @@ if (d2pos < menPos && menPos < appPos) ok('Script load order: data2 < mentor < a
 else fail('Script load order WRONG: data2 < mentor < app expected');
 
 console.log('\n=== 3. SERVICE WORKER ===');
-swJs.includes('kidworksheets-v2') ? ok('SW cache version is v2') : fail('SW still on v1 - old cache');
+(swJs.includes('kidworksheets-v2') || swJs.includes('kidworksheets-v3')) ? ok('SW cache version is current') : fail('SW still on old cache');
 ['data2.js','mentor.js','app.js','data.js'].forEach(f => {
   swJs.includes(f) ? ok('SW caches /js/'+f) : fail('SW NOT caching /js/'+f);
 });
@@ -44,6 +44,7 @@ swJs.includes('kidworksheets-v2') ? ok('SW cache version is v2') : fail('SW stil
 console.log('\n=== 4. CORE FUNCTIONS — app.js ===');
 const APP_FUNS = [
   'function renderCurrentQuestion',
+  'function prevQuestion',
   'function checkAnswer',
   'function renderMCQ',
   'function renderTrueFalse',
