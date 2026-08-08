@@ -853,6 +853,13 @@ function placeToCat(catIdx) {
 // ── Select MCQ ────────────────────────────────────────────────
 function selectMCQ(el, value) {
   if (state.player.checked) return;
+  if (state.player.selectedOption === value) {
+    state.player.selectedOption = null;
+    $$('.mcq-option').forEach(b => b.classList.remove('selected'));
+    const btn = $('#btn-check');
+    if (btn) btn.disabled = true;
+    return;
+  }
   state.player.selectedOption = value;
   $$('.mcq-option').forEach(b => b.classList.toggle('selected', b.getAttribute('data-val') === value));
   const btn = $('#btn-check');
@@ -862,6 +869,15 @@ function selectMCQ(el, value) {
 // ── Select TF ─────────────────────────────────────────────────
 function selectTF(el, value) {
   if (state.player.checked) return;
+  if (state.player.selectedOption === value) {
+    state.player.selectedOption = null;
+    const tBtn = $('#btn-true'), fBtn = $('#btn-false');
+    if (tBtn) tBtn.classList.remove('selected');
+    if (fBtn) fBtn.classList.remove('selected');
+    const btn = $('#btn-check');
+    if (btn) btn.disabled = true;
+    return;
+  }
   state.player.selectedOption = value;
   const tBtn = $('#btn-true'), fBtn = $('#btn-false');
   if (tBtn) tBtn.classList.toggle('selected', value === true);
@@ -2354,6 +2370,13 @@ function _renderWordComplete(q, display) {
 }
 
 function selectLetterChoice(value) {
+  if (state.player.checked) return;
+  if (state.player.selectedOption === value) {
+    state.player.selectedOption = null;
+    $$('.letter-choice').forEach(b => b.classList.remove('selected'));
+    const btn = $('#btn-check'); if (btn) btn.disabled = true;
+    return;
+  }
   state.player.selectedOption = value;
   $$('.letter-choice').forEach(b => b.classList.toggle('selected', b.textContent === value));
   const btn = $('#btn-check'); if (btn) btn.disabled = false;
@@ -2535,6 +2558,13 @@ function initAudioWriteCanvas(sheet) {
 
 function selectAudioMCQ(value) {
   if (state.player.checked) return;
+  if (state.player.selectedOption === value) {
+    state.player.selectedOption = null;
+    document.querySelectorAll('[id^="aopt-"]').forEach(b => b.classList.remove('selected'));
+    const btn = document.getElementById('btn-check');
+    if (btn) btn.disabled = true;
+    return;
+  }
   state.player.selectedOption = value;
   document.querySelectorAll('[id^="aopt-"]').forEach(b =>
     b.classList.toggle('selected', b.getAttribute('data-val') === value)
